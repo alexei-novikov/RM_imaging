@@ -19,7 +19,6 @@ import random
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 from sklearn.preprocessing import StandardScaler
-import TrainingFunctions_Jan25version as ttf_vers0
 import Helpers as H
 
 
