@@ -67,6 +67,41 @@ def accuracy(output, target):
     return num_correct/len(target)  
 
 
+class data_rho_presaved:
+    def __init__(self,data_path ,prop):
+
+        self.b=np.load(data_path+'/b.npy')
+        self.rho=np.load(data_path+'/rho.npy')
+        self.b=self.b[:int(len(self.b)*prop)]
+        self.rho=self.rho[:int(len(self.rho)*prop)]
+        self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
+        self.b=torch.cat((torch.tensor(self.b.real),torch.tensor(self.b.imag)),dim=-1).float()
+
+    def Check_data(self,medium):
+        rho=self.rho[:1000]
+        b=self.b[:1000]
+        rho=rho.cpu().detach().numpy()
+        b=b.cpu().detach().numpy()
+        rho=cat2complex(rho)
+        b=cat2complex(b)
+        if not np.allclose(medium@rho.T, b.T):
+            print('Data Incorrect. Exiting code')
+            exit()
+        else:
+            print('Data formatted correctly')
+
+
+    def __len__(self):
+        return(int(len(self.b)))
+    def __getitem__(self, idx):
+        return self.b[idx,...], self.rho[idx,...], float(torch.sum(self.rho[idx,...].real))
+
+
+#Computes number correct if target is 1-hot
+def accuracy(output, target):
+    num_correct=sum(torch.argmax(output, dim=1)==torch.argmax(target, dim=1))
+    return num_correct/len(target)  
+
 
 
 #sends image to Wandb platform
@@ -514,5 +549,13 @@ def MDS_wandbout_raw(perm1, perm2,scat_locat=[0,1,2,3]):
     rho[scat_locat]=1
     return raw_img_perm(rho, perm1, perm2, xpix=10,ypix=10, font_size=25, WAND=True)
     #H.KM_img(rho, g_permed_single@np.linalg.inv(perm_single),xpix=10,ypix=10, font_size=25)
+
+#reformats sweep input for a single run
+def reformat_sweep_for_1_run(param_dict):
+    new_dict={}
+    for key, value in param_dict.items():
+        for val_key, val_val in value.items():
+            new_dict[key]=val_val[0]
+    return new_dict
 
     
