@@ -62,7 +62,7 @@ parameters_dict = {
     'batch_size':{'values':[128]},
     'lin_type_decoder':{'values':['real']},#real, complex
     'root_MSE':{'values':[True]},
-    'GELMA':{'values':[True]},
+    'GELMA':{'values':[5e-10]},
 }
 
 #N alpha/B should be constatnt
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     #parameters_dict['run_name']={'values':timestampStr}
     EXP='dictionary_final'
 
-    if True:
+    if False:
         C.encoder_decoder(H.reformat_sweep_for_1_run(parameters_dict))                        
     elif EXP=='dictionary_final':
         key='89a70fbc572a495206df640bd6c9cbf2a4a0dcaa'

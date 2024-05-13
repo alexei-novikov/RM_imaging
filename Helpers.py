@@ -104,6 +104,7 @@ def accuracy(output, target):
 
 
 
+
 #sends image to Wandb platform
 def output2wandb(rho, rho_hat, i, epoch, xpix=31, ypix=21):
     plt.close()
@@ -134,6 +135,15 @@ def output2wandb(rho, rho_hat, i, epoch, xpix=31, ypix=21):
     ax = plt.gca()
     plt.setp(ax.get_xticklabels(), fontsize=20)
     plt.setp(ax.get_yticklabels(), fontsize=20)
+
+    buf = io.BytesIO()
+    fig.savefig(buf)
+    buf.seek(0)
+    img = Image.open(buf)
+     
+    del fig, buf
+    return [wandb.Image(img, caption="Epoch "+str(epoch))]
+
     
 
 # Counts number of params

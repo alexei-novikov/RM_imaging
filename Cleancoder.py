@@ -31,6 +31,7 @@ import Helpers as H
 
 def encoder_decoder(config=None):
     with wandb.init(config=config):#, project=config['project'], name = config['run_name']):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         config = wandb.config
 
         args=config
@@ -84,7 +85,7 @@ def encoder_decoder(config=None):
                 G_0_w=torch.cat((torch.tensor(G_0.real), torch.tensor(G_0.imag)), dim=0)
                 G_0_w=G_0_w.float()
                 decoder.weight.data=nn.parameter.Parameter(G_0_w.clone().detach().requires_grad_(True))
-        if args.GELMA:
+        if args.GELMA>0:
             GELMA_net=M.fc_net_batch(in_dim, args.hidden_dims, in_dim, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=args.dropout)
             optimizer_GELMA = torch.optim.AdamW(GELMA_net.parameters(), lr=.001, maximize=False)
             GELMA_net.to(device)
@@ -108,7 +109,6 @@ def encoder_decoder(config=None):
         torch.manual_seed(1)
         dateTimeObj = datetime.now()
         timestampStr = dateTimeObj.strftime("%d-%b-%Y (%H:%M:%S)") 
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         torch.manual_seed(args.seed)
  
         L1_updates=0
@@ -416,25 +416,23 @@ def encoder_decoder(config=None):
                                 l1_loss.backward(retain_graph=True)
                                 l1_unlab_loss_avg+=l1_loss.item()/len(trainloader_unlab)*L1_scaling
                                 
-                        if args.GELMA:
-                            GELMA_out=GELMA_net(b)
-                            inner_loss_term=torch.inner(GELMA_out, b-b_hat)
-                            inner_loss_term.backward(retain_graph=True)
-                            inner_loss_term_avg+=inner_loss_term.item()/len(trainloader_unlab)
-                            optimizer_GELMA.step()
+                    
 
 
                         b_hat=decoder(rho_hat)
                         b_hat=b_hat.squeeze()
                         MSE_loss=l2_loss(b_hat, b)
-                        # Assuming model is your neural network model
-                        
+                        if args.GELMA>0:
+                            GELMA_out=GELMA_net(b)
+                            GELMA_inners=torch.inner(GELMA_out.squeeze(), (b-b_hat).squeeze()).diagonal(dim1=-2, dim2=-1)
+                            inner_loss_term=args.GELMA*sum(GELMA_inners)/len(GELMA_inners)
+                            inner_loss_term.backward(retain_graph=True)
+                            inner_loss_term_avg+=inner_loss_term.item()/len(trainloader_unlab)/args.GELMA
+                            optimizer_GELMA.step()
 
                         MSE_loss.backward()
                         if args.l1_weight>0 and L1_scaling_burn>args.L1_burn_time and args.L1_rescaling==True:
                             L2_grad=L2_grad+sum([torch.norm(p.grad) for p in encoder.parameters()])
-                        #bce_loss=loss(rho_hat.squeeze(), rh.squeeze())
-                        #bce_loss.backward() 
                         optimizer_enc.step()
                         optimizer_dec.step()
                         train_loss+=MSE_loss.item()/len(trainloader_unlab)
@@ -602,7 +600,7 @@ def encoder_decoder(config=None):
             wand_dict['Mean_i Max_j |<hat g_j, g_i>|']=max_avg_inners_original
 
 
-            if args.GELMA:
+            if args.GELMA>0:
                 wand_dict['GELMA term']=inner_loss_term_avg
             if 'MDS' in args.data_type:
                 wand_dict['validation accuracy']=validation_accuracy
