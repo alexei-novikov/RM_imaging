@@ -45,15 +45,15 @@ def encoder_decoder(config=None):
         args.data_path=data_path
         avg_max_inners_list=[] #local save of max inners
         increasing=True #flag for L1 cyclic rescaling
-
-        if "MDS" not in args.data_type:
-            training_data=H.data_rho_loaded(data_path+'/train',max(args.labeled_data/80000,.00002))
-            training_data_unlab=H.data_rho_loaded(data_path+'/train',max(args.unlabeled_data/80000,.00001))
-            val_data=H.data_rho_loaded(data_path+'/val', 3000/8000)
+        if 'hom' or 'MDS' in args.data_type:
+            s=1
         else:
-            training_data=H.data_rho_presaved(data_path+'/train',max(args.labeled_data/80000,.00002))
-            training_data_unlab=H.data_rho_presaved(data_path+'/train',max(args.unlabeled_data/80000,.00001))
-            val_data=H.data_rho_presaved(data_path+'/val', 1.0)
+            s=4
+
+        training_data=H.data_rho_loaded(data_path+'/train',max(args.labeled_data/80000,.0001), sparsity=s)
+        training_data_unlab=H.data_rho_loaded(data_path+'/train',max(args.unlabeled_data/80000,.0001),sparsity=s)
+        val_data=H.data_rho_loaded(data_path+'/val', 3000/8000,sparsity=s)
+        
         in_dim=len(training_data[0][0].squeeze())  #N_rec*N_freq
         out_dim=len(training_data[0][1].squeeze())/2 #(N_K)/2
         in_dim=in_dim/2
@@ -92,7 +92,11 @@ def encoder_decoder(config=None):
             GELMA_net=nn.DataParallel(GELMA_net)
             GELMA_net.train()
 
-        medium= np.array(mat73.loadmat(data_path+'/rtt.mat')['Artt'])
+
+        try:
+            medium= np.array(mat73.loadmat(data_path+'/rtt.mat')['Artt'])
+        except:
+            medium= np.array(mat73.loadmat(data_path+'/rtt.mat')['A0'])
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -183,7 +187,6 @@ def encoder_decoder(config=None):
         args.run_timestamp=timestampStr 
         args.encoder_parmams=H.count_parameters(encoder)
         args.decoder_params=H.count_parameters(decoder)
-        medium= np.array(mat73.loadmat(data_path+'/rtt.mat')['Artt'])
         max_innnn=0
 
         inners=medium.transpose().conjugate()@medium

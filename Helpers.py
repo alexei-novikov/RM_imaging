@@ -27,12 +27,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #Data set class. Should contain your data, and when __getitem__ is called, it should 
 #return your data formatted for input into a model
 class data_rho_loaded:
-    def __init__(self,data_path ,prop):
+    def __init__(self,data_path ,prop,sparsity=4):
         if 'PNAS' in data_path and "train" in data_path:
-            self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), seed=0)
+            self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=0)
 
         elif 'PNAS' in data_path and 'val' in data_path:
-            self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, seed=100)
+            self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, S=sparsity,seed=100)
 
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
         self.b=torch.cat((torch.tensor(self.b.real),torch.tensor(self.b.imag)),dim=-1).float()
@@ -526,7 +526,15 @@ def raw_img(rho, font_size=50, file_name=None, xpix=31, ypix=21,WAND=False,figsi
 #generates data using sensing matrix in locat 
 def Generate_data_pnas(locat, amount, S=4, seed=0):
     np.random.seed(seed)    
-    medium= np.array(mat73.loadmat(locat+'/rtt.mat')['Artt'])
+    try:
+        medium= np.array(mat73.loadmat(locat+'/rtt.mat')['Artt'])
+    except:
+        try:
+            medium= np.array(mat73.loadmat(locat+'/rtt.mat')['A0'])
+
+        except:
+            print('No medium found')
+
     data_rho=np.zeros((amount,400))
     #data_b=np.zeros((amount,631))
     
