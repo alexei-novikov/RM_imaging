@@ -45,11 +45,11 @@ def encoder_decoder(config=None):
         args.data_path=data_path
         avg_max_inners_list=[] #local save of max inners
         increasing=True #flag for L1 cyclic rescaling
-        if 'hom' or 'MDS' in args.data_type:
+        if 'hom' in args.data_type or 'MDS' in args.data_type:
             s=1
         else:
             s=4
-
+        print('Sparsity: ', s)
         training_data=H.data_rho_loaded(data_path+'/train',max(args.labeled_data/80000,.0001), sparsity=s)
         training_data_unlab=H.data_rho_loaded(data_path+'/train',max(args.unlabeled_data/80000,.0001),sparsity=s)
         val_data=H.data_rho_loaded(data_path+'/val', 3000/8000,sparsity=s)
