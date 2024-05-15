@@ -61,6 +61,27 @@ class data_rho_loaded:
         return self.b[idx,...], self.rho[idx,...], float(torch.sum(self.rho[idx,...].real))
 
 
+
+class data_rho_CC:
+    def __init__(self,data_path ,prop,sparsity=4,max_offset=25):
+        if 'PNAS' in data_path and "train" in data_path:
+            self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=0)
+
+        elif 'PNAS' in data_path and 'val' in data_path:
+            self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, S=sparsity,seed=100)
+        self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
+        self.max_offset=max_offset
+
+    def __len__(self):
+        return(int(len(self.b)))
+
+    def __getitem__(self, idx):
+        outer=np.outer(self.b[idx,...],self.b[idx,...].conj())
+        diag=np.concatenate(([np.diagonal(outer, offset=off, axis1=0, axis2=1) for off in range(-self.max_offset, self.max_offset+1)]))    
+        diag=diag.ravel()    
+        return torch.cat((torch.tensor(diag.real),torch.tensor(diag.imag)),dim=-1).float(), self.rho[idx,...].float(), float(torch.sum(self.rho[idx,...].real))
+
+
 #Computes number correct if target is 1-hot
 def accuracy(output, target):
     num_correct=sum(torch.argmax(output, dim=1)==torch.argmax(target, dim=1))
