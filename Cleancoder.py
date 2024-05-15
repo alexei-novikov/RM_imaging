@@ -428,7 +428,7 @@ def encoder_decoder(config=None):
                         if args.GELMA>0:
                             GELMA_out=GELMA_net(b)
                             GELMA_inners=torch.inner(GELMA_out.squeeze(), (b-b_hat).squeeze()).diagonal(dim1=-2, dim2=-1)
-                            inner_loss_term=args.GELMA*sum(GELMA_inners)/len(GELMA_inners)
+                            inner_loss_term=args.GELMA*sum(abs(GELMA_inners))/len(GELMA_inners)
                             inner_loss_term.backward(retain_graph=True)
                             inner_loss_term_avg+=inner_loss_term.item()/len(trainloader_unlab)/args.GELMA
                             optimizer_GELMA.step()
