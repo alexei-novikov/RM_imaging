@@ -50,7 +50,7 @@ parameters_dict = {
     'Data_locat':{'values':['GELMA_Long']},#where the data is located
     'l1_weight' :{'values': [5e-15]},
     'out_encoder':{'values':['sigmoid']},#Sigmoid
-    'L1_rescaling':{'values':[False]},
+    'L1_rescaling':{'values':[True]},
     'L1_burn_time':{'values':[10]},
     'activation':{'values':['relu']},#relu sigmoidnvidi
     'G_0_intiailization':{'values':[True]},
@@ -62,7 +62,7 @@ parameters_dict = {
     'batch_size':{'values':[128]},
     'lin_type_decoder':{'values':['real']},#real, complex
     'root_MSE':{'values':[True]},
-    'GELMA':{'values':[5e-10]},
+    'GELMA':{'values':[5e-5]},
 }
 
 #N alpha/B should be constatnt
