@@ -87,7 +87,7 @@ def encoder_decoder(config=None):
                 decoder.weight.data=nn.parameter.Parameter(G_0_w.clone().detach().requires_grad_(True))
         if args.GELMA>0:
             GELMA_net=M.fc_net_batch(in_dim, args.hidden_dims, in_dim, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=args.dropout)
-            optimizer_GELMA = torch.optim.AdamW(GELMA_net.parameters(), lr=.001/args.GELMA, maximize=True)
+            optimizer_GELMA = torch.optim.AdamW(GELMA_net.parameters(), lr=.001, maximize=True)
             GELMA_net.to(device)
             GELMA_net=nn.DataParallel(GELMA_net)
             GELMA_net.train()
