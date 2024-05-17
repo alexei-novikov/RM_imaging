@@ -128,6 +128,7 @@ def encoder_decoder(config=None):
             training_data.Check_data(medium)
             training_data_unlab.Check_data(medium)
             val_data.Check_data(medium)
+        
         trainloader_unlab=DataLoader(training_data_unlab,batch_size=Loading_batch_size,shuffle=True,num_workers=16, pin_memory=True)
         valloader=DataLoader(val_data,batch_size=len(val_data),shuffle=False,num_workers=1, pin_memory=True)
         
