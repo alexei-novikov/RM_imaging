@@ -36,9 +36,8 @@ class data_rho_loaded:
 
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
         self.b=torch.cat((torch.tensor(self.b.real),torch.tensor(self.b.imag)),dim=-1).float()
-        if len(self.b)<=80000:
-            self.rho=self.rho.to(device)
-            self.b=self.b.to(device)
+
+            
         #self.rho=self.rho.to(device)
         #self.b=self.b.to(device)
     
@@ -58,9 +57,9 @@ class data_rho_loaded:
 
 
     def __len__(self):
-        return(int(len(self.b)))
+        return(int(len(self.b.cpu().detach())))
     def __getitem__(self, idx):
-        return self.b[idx,...], self.rho[idx,...], float(torch.sum(self.rho[idx,...]))
+        return self.b[idx,...], self.rho[idx,...], torch.sum(self.rho[idx,...])
 
 
 

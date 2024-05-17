@@ -46,7 +46,7 @@ parameters_dict = {
     'data_type': {'values': ['PNAS-regime_all_seeds']},#'p1_40real_6e-1_sameconfigurations_all_seeds','p1_400real_6e-1_sameconfigurations_all_seeds','p1_4000real_6e-1_sameconfigurations_all_seeds','p1_20real_6e-1_singletarg_all_seeds','p1_40real_6e-1_singletarg_all_seeds','p1_400real_6e-1_singletarg_all_seeds','p1_4000real_6e-1_singletarg_all_seeds']},#'p1_IIDreal_6e-1_all_seeds','p1_400real_6e-1_all_seeds','p1_4000real_6e-1_all_seeds', ,'p1_20real_6e-1_all_seeds'
     'net_type': {'values':['NL_L']},#model type.'fc_NC', recurrent_out' 'fc', 'linear', 'conv' (conv has not been updated since 10/10/2023
     'labeled_data': {'values': [0]},#what amountof the data to use
-    'unlabeled_data' : {'values' :[5000]},#what amount of the data to use
+    'unlabeled_data' : {'values' :[40000]},#what amount of the data to use
     'Data_locat':{'values':['GELMA_Long']},#where the data is located
     'l1_weight' :{'values': [5e-5]},
     'out_encoder':{'values':['sigmoid']},#Sigmoid
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     #parameters_dict['run_name']={'values':timestampStr}
     EXP='dictionary_final'
 
-    if True:
+    if False:
         C.encoder_decoder(H.reformat_sweep_for_1_run(parameters_dict))                        
     elif EXP=='dictionary_final':
         key='89a70fbc572a495206df640bd6c9cbf2a4a0dcaa'

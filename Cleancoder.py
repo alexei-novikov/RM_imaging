@@ -117,21 +117,18 @@ def encoder_decoder(config=None):
  
         L1_updates=0
 
-        target='raw'
-        scaler=None
-        rand_perm=None
         sigmoid = nn.Sigmoid()
         softmax=nn.Softmax(dim=1)
         
         #10kdata\approx 2.26GB
 
         Loading_batch_size=args.batch_size
-        trainloader=DataLoader(training_data,batch_size=Loading_batch_size,shuffle=True,num_workers=8, pin_memory=True)
+        trainloader=DataLoader(training_data,batch_size=Loading_batch_size,shuffle=True,num_workers=16, pin_memory=True)
         if 'MDS' not in args.data_type:
             training_data.Check_data(medium)
             training_data_unlab.Check_data(medium)
             val_data.Check_data(medium)
-        trainloader_unlab=DataLoader(training_data_unlab,batch_size=Loading_batch_size,shuffle=True,num_workers=4, pin_memory=True)
+        trainloader_unlab=DataLoader(training_data_unlab,batch_size=Loading_batch_size,shuffle=True,num_workers=16, pin_memory=True)
         valloader=DataLoader(val_data,batch_size=len(val_data),shuffle=False,num_workers=1, pin_memory=True)
         
         dummy=nn.Linear(242, 651,bias=False)
