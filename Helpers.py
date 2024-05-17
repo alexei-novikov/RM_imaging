@@ -30,13 +30,15 @@ class data_rho_loaded:
     def __init__(self,data_path ,prop,sparsity=4):
         if 'PNAS' in data_path and "train" in data_path:
             self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=0)
+            self.data_path=data_path[:-5]
 
         elif 'PNAS' in data_path and 'val' in data_path:
             self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, S=sparsity,seed=100)
-
+            self.data_path=data_path[:-3]
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
         self.b=torch.cat((torch.tensor(self.b.real),torch.tensor(self.b.imag)),dim=-1).float()
 
+            
         #self.rho=self.rho.to(device)
         #self.b=self.b.to(device)
     
@@ -58,29 +60,42 @@ class data_rho_loaded:
     def __len__(self):
         return(int(len(self.b)))
     def __getitem__(self, idx):
-        return self.b[idx,...], self.rho[idx,...], float(torch.sum(self.rho[idx,...].real))
+        return self.b[idx,...], self.rho[idx,...], torch.sum(self.rho[idx,...])
 
 
 
-class data_rho_CC:
-    def __init__(self,data_path ,prop,sparsity=4,max_offset=25):
+class data_rho_CC(data_rho_loaded):
+
+    def __init__(self,data_path ,prop,sparsity=4):
+    
+        
+
         if 'PNAS' in data_path and "train" in data_path:
             self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=0)
+            self.data_path=data_path[:-5]
 
         elif 'PNAS' in data_path and 'val' in data_path:
             self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, S=sparsity,seed=100)
-        self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
-        self.max_offset=max_offset
+            self.data_path=data_path[:-3]
 
+
+        if sparsity==1:
+            self.rho, self.b=Generate_data_pnas_EYE(self.data_path)
+        self.Mask=np.array(mat73.loadmat(self.data_path+'/M.mat')['M'])
+        self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
+
+
+        
     def __len__(self):
         return(int(len(self.b)))
 
     def __getitem__(self, idx):
+        
         outer=np.outer(self.b[idx,...],self.b[idx,...].conj())
-        diag=np.concatenate(([np.diagonal(outer, offset=off, axis1=0, axis2=1) for off in range(-self.max_offset, self.max_offset+1)]))    
-        diag=diag.ravel()    
-        return torch.cat((torch.tensor(diag.real),torch.tensor(diag.imag)),dim=-1).float(), self.rho[idx,...].float(), float(torch.sum(self.rho[idx,...].real))
-
+        outer=outer[abs(self.Mask)>0]
+        outer=outer.ravel()
+        return torch.cat((torch.tensor(outer.real),torch.tensor(outer.imag)),dim=-1).float(),self.rho[idx,...].float(), float(torch.sum(self.rho[idx,...].real))
+        
 
 #Computes number correct if target is 1-hot
 def accuracy(output, target):
@@ -568,6 +583,21 @@ def Generate_data_pnas(locat, amount, S=4, seed=0):
 
     return data_rho, data_b.T
 
+def Generate_data_pnas_EYE(locat):
+    try:
+        medium= np.array(mat73.loadmat(locat+'/rtt.mat')['Artt'])
+    except:
+        try:
+            medium= np.array(mat73.loadmat(locat+'/rtt.mat')['A0'])
+
+        except:
+            print('No medium found')
+
+    data_rho=np.eye(400)
+    data_b=medium@data_rho.T
+    print(f"Medium: {medium.shape}, Rho: {data_rho.shape}, B: {data_b.T.shape}")
+
+    return data_rho, data_b.T
 
 #Perms target then plots KM image
 def MDS_wandbout_KM(perm, g_permed):
