@@ -41,7 +41,7 @@ parameters_dict = {
         'values' :[[3000,3000, 3000, 1800,1800,2400,4800,400,1500,500,500, 500, 300, 300, 400,800]],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
     },          
     'dropout':{'values':[.25]}, #default 0
-    'num_epochs' :{ 'values': [3000] },#number of data passes
+    'num_epochs' :{ 'values': [300] },#number of data passes
     'seed':{'values':[0]},
     'data_type': {'values': ['PNAS-regime_all_seeds']},#'p1_40real_6e-1_sameconfigurations_all_seeds','p1_400real_6e-1_sameconfigurations_all_seeds','p1_4000real_6e-1_sameconfigurations_all_seeds','p1_20real_6e-1_singletarg_all_seeds','p1_40real_6e-1_singletarg_all_seeds','p1_400real_6e-1_singletarg_all_seeds','p1_4000real_6e-1_singletarg_all_seeds']},#'p1_IIDreal_6e-1_all_seeds','p1_400real_6e-1_all_seeds','p1_4000real_6e-1_all_seeds', ,'p1_20real_6e-1_all_seeds'
     'net_type': {'values':['NL_L']},#model type.'fc_NC', recurrent_out' 'fc', 'linear', 'conv' (conv has not been updated since 10/10/2023
