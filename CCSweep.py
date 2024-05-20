@@ -63,6 +63,8 @@ parameters_dict = {
     'lin_type_decoder':{'values':['real']},#real, complex
     'root_MSE':{'values':[True]},
     'GELMA':{'values':[5e-5]},
+    'LR':{'values':[1e-5]},
+
 }
 
 #N alpha/B should be constatnt

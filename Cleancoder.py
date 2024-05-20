@@ -87,7 +87,7 @@ def encoder_decoder(config=None):
                 decoder.weight.data=nn.parameter.Parameter(G_0_w.clone().detach().requires_grad_(True))
         if args.GELMA>0:
             GELMA_net=M.fc_net_batch(in_dim, args.hidden_dims, in_dim, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=args.dropout)
-            optimizer_GELMA = torch.optim.AdamW(GELMA_net.parameters(), lr=.001, maximize=True)
+            optimizer_GELMA = torch.optim.AdamW(GELMA_net.parameters(), lr=args.lr, maximize=True)
             GELMA_net.to(device)
             GELMA_net=nn.DataParallel(GELMA_net)
             GELMA_net.train()
@@ -150,14 +150,14 @@ def encoder_decoder(config=None):
         
         relu=nn.ReLU()
         if args.optimizer=='Adam':
-            optimizer_enc = torch.optim.Adam(encoder.parameters(), lr=.001)
-            optimizer_dec= torch.optim.Adam(decoder.parameters(),  lr=.001)
+            optimizer_enc = torch.optim.Adam(encoder.parameters(), lr=args.lr)
+            optimizer_dec= torch.optim.Adam(decoder.parameters(),  lr=args.lr)
         elif args.optimizer=='AdamW':
-            optimizer_enc = torch.optim.AdamW(encoder.parameters(), lr=.001, weight_decay=args.weight_decay)
-            optimizer_dec= torch.optim.AdamW(decoder.parameters(),  lr=.001, weight_decay=args.weight_decay)
+            optimizer_enc = torch.optim.AdamW(encoder.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+            optimizer_dec= torch.optim.AdamW(decoder.parameters(),  lr=args.lr, weight_decay=args.weight_decay)
         else :
-            optimizer_enc = torch.optim.SGD(encoder.parameters(), lr=.001)
-            optimizer_dec= torch.optim.SGD(decoder.parameters(),  lr=.001)
+            optimizer_enc = torch.optim.SGD(encoder.parameters(), lr=args.lr)
+            optimizer_dec= torch.optim.SGD(decoder.parameters(),  lr=args.lr)
         if args.sch=='StepLR':
             scheduler_enc=torch.optim.lr_scheduler.StepLR(optimizer_enc, step_size=100,gamma=0.1, verbose=True)
         elif args.sch=='CyclicLr':
