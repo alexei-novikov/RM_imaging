@@ -38,17 +38,17 @@ L1=[800,750, 700, 650, 600, 300,  300, 300, 300,  300, 300, 300, 400, 800, 1200]
 #L1_old_data=[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]
 parameters_dict = {
     'hidden_dims': {
-        'values' :[[3000,3000, 3000, 1800,1800,2400,4800,400,1500,500,500, 500, 300, 300, 400,800]],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
+        'values' :[[2000,2500, 3000, 2500,2000,1500,1000,500,500, 500, 300, 300, 400,800]],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
     },          
     'dropout':{'values':[.25]}, #default 0
-    'num_epochs' :{ 'values': [300] },#number of data passes
+    'num_epochs' :{ 'values': [3000] },#number of data passes
     'seed':{'values':[0]},
     'data_type': {'values': ['PNAS-regime_all_seeds']},#'p1_40real_6e-1_sameconfigurations_all_seeds','p1_400real_6e-1_sameconfigurations_all_seeds','p1_4000real_6e-1_sameconfigurations_all_seeds','p1_20real_6e-1_singletarg_all_seeds','p1_40real_6e-1_singletarg_all_seeds','p1_400real_6e-1_singletarg_all_seeds','p1_4000real_6e-1_singletarg_all_seeds']},#'p1_IIDreal_6e-1_all_seeds','p1_400real_6e-1_all_seeds','p1_4000real_6e-1_all_seeds', ,'p1_20real_6e-1_all_seeds'
     'net_type': {'values':['NL_L']},#model type.'fc_NC', recurrent_out' 'fc', 'linear', 'conv' (conv has not been updated since 10/10/2023
     'labeled_data': {'values': [0]},#what amountof the data to use
     'unlabeled_data' : {'values' :[20000]},#what amount of the data to use
     'Data_locat':{'values':['GELMA_Long']},#where the data is located
-    'l1_weight' :{'values': [5e-15]},
+    'l1_weight' :{'values': [5e-5]},
     'out_encoder':{'values':['sigmoid']},#Sigmoid
     'L1_rescaling':{'values':[False]},
     'L1_burn_time':{'values':[10]},
@@ -63,8 +63,7 @@ parameters_dict = {
     'lin_type_decoder':{'values':['real']},#real, complex
     'root_MSE':{'values':[True]},
     'GELMA':{'values':[5e-5]},
-    'LR':{'values':[1e-5]},
-
+    'LR':{'values':[1e-3]},
 }
 
 #N alpha/B should be constatnt
