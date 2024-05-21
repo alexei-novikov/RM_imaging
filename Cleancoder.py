@@ -68,23 +68,24 @@ def encoder_decoder(config=None):
 
 
 
-        in_dim=len(training_data[0][0].squeeze())  #N_rec*N_freq
-        out_dim=len(training_data[0][1].squeeze())/2 #(N_K)/2
+        in_dim=len(training_data_unlab[0][0].squeeze())  #N_rec*N_freq
+        out_dim=len(training_data_unlab[0][1].squeeze())/2 #(N_K)/2
         in_dim=in_dim/2
         out_dim = out_dim/2
         torch.manual_seed(args.seed)
 
 
-        if args.out_encoder=='sigmoid' and args.Final_batch and 'MDS' not in args.data_type:
-            encoder=M.fc_net_extra(in_dim, args.hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=args.dropout)
-        else:
-            encoder=M.fc_net_batch(in_dim, args.hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=args.dropout)
+        
         if 'complex' in args.data_type:
             decoder=M.complex_linear_layer(651, 121, bias=False, activation='Linear_layer')
         elif args.lin_type_decoder=='complex':
             #encoder=M.fc_net_extra(in_dim, args.hidden_dims, out_dim*2, net_type='fc',linear_type='complex', activation='mod_relu', bias=True, out_scaling=None, dropout=args.dropout) # C^{N_rec*N_freq} -> C^ {N_k} 
             decoder=M.complex_linear_layer(int(int(out_dim*2)), in_dim, bias=False, activation='Linear_layer') #C^ {N_k} -> C^{N_rec*N_freq}
             encoder=M.fc_net_extra(int(in_dim), args.hidden_dims, int(out_dim*2), net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=args.dropout)    # C^{N_rec*N_freq} -> R^ {N_k}
+        elif  'MDS'  in args.data_type:
+            encoder=M.fc_net_batch(in_dim, args.hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=args.dropout)
+            decoder=nn.Linear(int(int(out_dim*2)), int(in_dim*2), bias=False)  #R^ {N_k} -> C^{N_rec*N_freq}
+        
         else:
             encoder=M.fc_net_extra(in_dim, args.hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=args.dropout)    # C^{N_rec*N_freq} -> R^ {N_k}
             decoder=nn.Linear(int(int(out_dim*2)), int(in_dim*2), bias=False)  #R^ {N_k} -> C^{N_rec*N_freq}
@@ -578,14 +579,19 @@ def encoder_decoder(config=None):
                     rh=rh.squeeze() 
                     CE_val_loss=CE_loss_f(rho_hat.squeeze(), rh.squeeze())
                     CE_val_loss_avg+=CE_val_loss.item()
+                    unlab_val_lossavg+=CE_val_loss.item()
+                    
                 elif args.out_encoder=='sigmoid':
-
                     rho_hat=sigmoid(rho_hat)
+                    val_loss=l2_loss(b_hat.squeeze(), b.squeeze())
+                    unlab_val_lossavg+=val_loss.item()
 
-                b_hat=decoder(rho_hat)
-                val_loss=l2_loss(b_hat.squeeze(), b.squeeze())
+                else:
+                    val_loss=l2_loss(b_hat.squeeze(), b.squeeze())
+                    unlab_val_lossavg+=val_loss.item()
                 
-                unlab_val_lossavg+=val_loss.item()
+                b_hat=decoder(rho_hat)
+                
                 if batch==0:
                     if  'complex' not in args.data_type and args.lin_type_decoder!='complex':
                         if 'MDS' in args.data_type:
