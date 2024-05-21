@@ -583,14 +583,15 @@ def encoder_decoder(config=None):
                     
                 elif args.out_encoder=='sigmoid':
                     rho_hat=sigmoid(rho_hat)
+                    b_hat=decoder(rho_hat)
                     val_loss=l2_loss(b_hat.squeeze(), b.squeeze())
                     unlab_val_lossavg+=val_loss.item()
 
                 else:
+                    b_hat=decoder(rho_hat)
                     val_loss=l2_loss(b_hat.squeeze(), b.squeeze())
                     unlab_val_lossavg+=val_loss.item()
                 
-                b_hat=decoder(rho_hat)
                 
                 if batch==0:
                     if  'complex' not in args.data_type and args.lin_type_decoder!='complex':
