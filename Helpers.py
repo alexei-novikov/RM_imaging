@@ -102,23 +102,12 @@ class data_rho_CC(data_rho_loaded):
 class data_rho_CC_IID(data_rho_loaded):
     def __init__(self,data_path ,prop,sparsity=4, seed=0):
         self.b=np.load(data_path+'/b.npy') 
-
-
-
-        if 'PNAS' in data_path and "train" in data_path:
-            self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=seed)
-            self.data_path=data_path[:-5]
-
-        elif 'PNAS' in data_path and 'val' in data_path:
-            self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, S=sparsity,seed=100)
-            self.data_path=data_path[:-3]
-
-
-        if sparsity==1:
-            self.rho, self.b=Generate_data_pnas_EYE(self.data_path)
-        self.Mask=np.array(mat73.loadmat(self.data_path+'/M.mat')['M'])
+        self.rho=np.load(data_path+'/rho.npy')
+        
+        self.b=self.b[:int(80000*(prop))]
+        self.rho=self.rho[:int(80000*(prop))]
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
-
+        
 
         
     def __len__(self):

@@ -46,17 +46,22 @@ def encoder_decoder(config=None):
         avg_max_inners_list=[] #local save of max inners
         increasing=True #flag for L1 cyclic rescaling
         if 'hom' in args.data_type or 'MDS' in args.data_type:
+            
+            training_data=H.data_rho_CC_IID(data_path+'/train',max(args.labeled_data/80000,.0001))
+            training_data_unlab=H.data_rho_CC_IID(data_path+'/train',max(args.unlabeled_data/80000,.0001))
+            val_data=H.data_rho_CC_IID(data_path+'/val', 3000/8000)
             s=1
-            training_data=H.data_rho_loaded(data_path+'/train',max(args.labeled_data/80000,.0001), sparsity=s,seed=args.seed+20)
+            
+        else:
+            
+            s=4
+
+
+            training_data=H.data_rho_loaded(data_path+'/train',max(args.labeled_data/80000,.0001), sparsity=s,seed=args.seed+50)
             training_data_unlab=H.data_rho_loaded(data_path+'/train',max(args.unlabeled_data/80000,.0001),sparsity=s,seed=args.seed)
             val_data=H.data_rho_loaded(data_path+'/val', 3000/8000,sparsity=s)
     
             
-        else:
-            training_data=H.data_rho_CC_IID(data_path+'/train',max(args.labeled_data/80000,.0001), sparsity=s)
-            training_data_unlab=H.data_rho_CC_IID(data_path+'/train',max(args.unlabeled_data/80000,.0001),sparsity=s,seed=args.seed)
-            val_data=H.data_rho_CC_IID(data_path+'/val', 3000/8000,sparsity=s)
-            s=4
 
 
         print('Sparsity: ', s)
@@ -67,9 +72,10 @@ def encoder_decoder(config=None):
         out_dim=len(training_data[0][1].squeeze())/2 #(N_K)/2
         in_dim=in_dim/2
         out_dim = out_dim/2
+        torch.manual_seed(args.seed)
 
 
-        if args.out_encoder=='sigmoid' and args.Final_batch or 'MDS' in args.data_type:
+        if args.out_encoder=='sigmoid' and args.Final_batch and 'MDS' not in args.data_type:
             encoder=M.fc_net_extra(in_dim, args.hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=args.dropout)
         else:
             encoder=M.fc_net_batch(in_dim, args.hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=args.dropout)
@@ -119,10 +125,8 @@ def encoder_decoder(config=None):
             G_0_w=G_0_w.float()
             G_0_w=G_0_w.to(device)
         
-        torch.manual_seed(1)
         dateTimeObj = datetime.now()
         timestampStr = dateTimeObj.strftime("%d-%b-%Y (%H:%M:%S)") 
-        torch.manual_seed(args.seed)
  
         L1_updates=0
 
