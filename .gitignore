@@ -1,5 +1,6 @@
 wandb/
 __pycache__/
 Out/
+Data/
 CCSweep.py
 *.json
