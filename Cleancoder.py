@@ -41,7 +41,7 @@ def encoder_decoder(config=None):
         rand_perm=None
         cwd=os. getcwd()
         #data_type=p1_1real_6e-1_5sparse_125e-1X1e-0Ydiscrization_all_seeds
-        data_path=os.path.join(cwd,f'{args.data_type}/{args.data_type[:-10]}_seed{args.seed}')
+        data_path=os.path.join(cwd,f'{args.data_type}/{args.data_type[:-10]}_seed{0}')
         args.data_path=data_path
         avg_max_inners_list=[] #local save of max inners
         increasing=True #flag for L1 cyclic rescaling
@@ -51,7 +51,7 @@ def encoder_decoder(config=None):
             s=4
         print('Sparsity: ', s)
         training_data=H.data_rho_loaded(data_path+'/train',max(args.labeled_data/80000,.0001), sparsity=s)
-        training_data_unlab=H.data_rho_loaded(data_path+'/train',max(args.unlabeled_data/80000,.0001),sparsity=s)
+        training_data_unlab=H.data_rho_loaded(data_path+'/train',max(args.unlabeled_data/80000,.0001),sparsity=s,seed=args.seed)
         val_data=H.data_rho_loaded(data_path+'/val', 3000/8000,sparsity=s)
         
         in_dim=len(training_data[0][0].squeeze())  #N_rec*N_freq
