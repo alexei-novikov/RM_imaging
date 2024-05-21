@@ -62,8 +62,8 @@ parameters_dict = {
     'batch_size':{'values':[128]},
     'lin_type_decoder':{'values':['real']},#real, complex
     'root_MSE':{'values':[True]},
-    'GELMA':{'values':[5e-1]},
-    'lr':{'values':[1e-3]},
+    'GELMA':{'values':[5e-5]},
+    'LR':{'values':[1e-3]},
 }
 
 #N alpha/B should be constatnt
