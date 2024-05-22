@@ -41,14 +41,14 @@ parameters_dict = {
         'values' :[[2500,2500, 2500, 1500, 1500, 2000,4000]],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
     },          
     'dropout':{'values':[.25]}, #default 0
-    'num_epochs' :{ 'values': [1500] },#number of data passes
+    'num_epochs' :{ 'values': [3000] },#number of data passes
     'seed':{'values':[0]},
     'data_type': {'values': ['PNAS-regime_all_seeds']},#PNAS-highcoh_regime_all_seeds,PNAS-regime_all_seeds,PNAS-lowcoh_regime_all_seeds,PNAS-regime_all_seeds
     'net_type': {'values':['NL_L']},#model type.'fc_NC', recurrent_out' 'fc', 'linear', 'conv' (conv has not been updated since 10/10/2023
     'labeled_data': {'values': [0]},#what amountof the data to use
     'unlabeled_data' : {'values' :[5000]},#what amount of the data to use
     'Data_locat':{'values':['Low_data_GELMA']},#where the data is located
-    'l1_weight' :{'values': [1.0]},
+    'l1_weight' :{'values': [1e-7]},
     'out_encoder':{'values':['sigmoid']},#Sigmoid
     'L1_rescaling':{'values':[False]},
     'L1_burn_time':{'values':[20]},
