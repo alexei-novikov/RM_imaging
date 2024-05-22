@@ -38,10 +38,10 @@ L1=[800,750, 700, 650, 600, 300,  300, 300, 300,  300, 300, 300, 400, 800, 1200]
 #L1_old_data=[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]
 parameters_dict = {
     'hidden_dims': {
-        'values' :[[50,50, 50, 50,50,50,50,50,50,30,30,30, 30,30,30,30,30,30 ,40,40,40,40,40,40,40,40,40,80,80,80,80,80,80,80,80,500]],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
+        'values' :[[100,100, 100, 100,100,100,100,100,100,100,500]],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
     },          
     'dropout':{'values':[.25]}, #default 0
-    'num_epochs' :{ 'values': [50000] },#number of data passes
+    'num_epochs' :{ 'values': [100000] },#number of data passes
     'seed':{'values':[0]},
     'data_type': {'values': ['PNAS-regime_all_seeds']},#PNAS-highcoh_regime_all_seeds,PNAS-regime_all_seeds,PNAS-lowcoh_regime_all_seeds,PNAS-regime_all_seeds
     'net_type': {'values':['NL_L']},#model type.'fc_NC', recurrent_out' 'fc', 'linear', 'conv' (conv has not been updated since 10/10/2023
