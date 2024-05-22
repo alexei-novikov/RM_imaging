@@ -57,8 +57,8 @@ def encoder_decoder(config=None):
             s=4
 
 
-            training_data=H.data_rho_loaded(data_path+'/train',max(args.labeled_data/80000,.0001), sparsity=s,seed=0)
-            training_data_unlab=H.data_rho_loaded(data_path+'/train',max(args.unlabeled_data/80000,.0001),sparsity=s,seed=0)
+            training_data=H.data_rho_loaded(data_path+'/train',max(args.labeled_data/80000,.0001), sparsity=s,seed=args.seed)
+            training_data_unlab=H.data_rho_loaded(data_path+'/train',max(args.unlabeled_data/80000,.0001),sparsity=s,seed=args.seed)
             val_data=H.data_rho_loaded(data_path+'/val', 3000/8000,sparsity=s)
     
             
