@@ -65,7 +65,7 @@ class data_rho_loaded:
 
 
 class data_rho_CC(data_rho_loaded):
-    def __init__(self,data_path ,prop,sparsity=4, seed=0):
+    def __init__(self,data_path ,prop,sparsity=4, seed=0, medium='Random'):
     
         if 'PNAS' in data_path and "train" in data_path:
             self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=seed)
@@ -77,7 +77,7 @@ class data_rho_CC(data_rho_loaded):
 
 
         if sparsity==1:
-            self.rho, self.b=Generate_data_pnas_EYE(self.data_path)
+            self.rho, self.b=Generate_data_pnas_EYE(self.data_path, medium=medium)
         self.Mask=np.array(mat73.loadmat(self.data_path+'/M.mat')['M'])
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
 
@@ -613,16 +613,12 @@ def Generate_data_pnas(locat, amount, S=4, seed=0):
 
     return data_rho, data_b.T
 
-def Generate_data_pnas_EYE(locat):
-    try:
+def Generate_data_pnas_EYE(locat, medium='Random'):
+    if medium=='Random':
         medium= np.array(mat73.loadmat(locat+'/rtt.mat')['Artt'])
-    except:
-        try:
-            medium= np.array(mat73.loadmat(locat+'/rtt.mat')['A0'])
-
-        except:
-            print('No medium found')
-
+    else:
+        medium= np.array(mat73.loadmat(locat+'/G_0.mat')['A0'])
+        
     data_rho=np.eye(400)
     data_b=medium@data_rho.T
     print(f"Medium: {medium.shape}, Rho: {data_rho.shape}, B: {data_b.T.shape}")
