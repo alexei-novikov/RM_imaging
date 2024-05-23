@@ -100,7 +100,7 @@ class data_rho_CC(data_rho_loaded):
 
 
 class data_rho_CC_IID(data_rho_loaded):
-    def __init__(self,data_path ,prop,sparsity=4, seed=0):
+    def __init__(self,data_path ,prop):
         self.Mask=np.array(mat73.loadmat(data_path+'/M.mat')['M'])
 
         self.b=np.load(data_path+'/b.npy') 
