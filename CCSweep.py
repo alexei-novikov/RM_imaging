@@ -65,7 +65,7 @@ parameters_dict = {
     'GELMA':{'values':[5e-8]},
     'lr':{'values':[1e-3]},
 }
-
+0.0000001
 #N alpha/B should be constatnt
 
 #1521006 is the benchmark run pid
