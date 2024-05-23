@@ -38,7 +38,7 @@ L1=[800,750, 700, 650, 600, 300,  300, 300, 300,  300, 300, 300, 400, 800, 1200]
 #L1_old_data=[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]
 parameters_dict = {
     'hidden_dims': {
-        'values' :[[100,100, 100, 100,100,100,100,100,100,100,500]],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
+        'values' :[[100,100, 100, 100,100,100,100,100,100,100,100,100,100,100,500],[500,500, 500, 300, 300, 400,800],[2500,2500,2500,1500,1500,2000,4000]],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
     },          
     'dropout':{'values':[.25]}, #default 0
     'num_epochs' :{ 'values': [100000] },#number of data passes
@@ -48,7 +48,7 @@ parameters_dict = {
     'labeled_data': {'values': [0]},#what amountof the data to use
     'unlabeled_data' : {'values' :[5000]},#what amount of the data to use
     'Data_locat':{'values':['small_net_experiments']},#where the data is located
-    'l1_weight' :{'values': [5e-8]},
+    'l1_weight' :{'values': [5e-5]},
     'out_encoder':{'values':['sigmoid']},#Sigmoid
     'L1_rescaling':{'values':[False]},
     'L1_burn_time':{'values':[20]},
@@ -62,7 +62,7 @@ parameters_dict = {
     'batch_size':{'values':[128]},
     'lin_type_decoder':{'values':['real']},#real, complex
     'root_MSE':{'values':[True]},
-    'GELMA':{'values':[5e-8]},
+    'GELMA':{'values':[5e-5]},
     'lr':{'values':[1e-3]},
 }
 0.0000001
