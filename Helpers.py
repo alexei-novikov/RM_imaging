@@ -38,9 +38,9 @@ class data_rho_loaded:
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
         self.b=torch.cat((torch.tensor(self.b.real),torch.tensor(self.b.imag)),dim=-1).float()
 
-            
-        #self.rho=self.rho.to(device)
-        #self.b=self.b.to(device)
+        if prop<=1.0:
+            self.rho=self.rho.to(device)
+            self.b=self.b.to(device)
     
 
     def Check_data(self,medium):
@@ -61,6 +61,14 @@ class data_rho_loaded:
         return(int(len(self.b)))
     def __getitem__(self, idx):
         return self.b[idx,...], self.rho[idx,...], torch.sum(self.rho[idx,...])
+
+
+class DataLoader_c(DataLoader_c):
+    def __init__(training_data_unlab,batch_size=Loading_batch_size,shuffle=True):
+        #self.num_chunks=training_data_unlab.shape[0]//batch_size
+        self.training_data_unlab_b=torch.split(training_data_unlab.b, self.num_chunks)
+        self.training_data_unlab_rho=torch.split(training_data_unlab.rho, self.num_chunks)
+        self.curr_perm=torch.randperm(len(self.training_data_unlab_b))
 
 
 
@@ -92,7 +100,18 @@ class data_rho_CC(data_rho_loaded):
         outer=outer[abs(self.Mask)>0]
         outer=outer.ravel()
         return torch.cat((torch.tensor(outer.real),torch.tensor(outer.imag)),dim=-1).float(),self.rho[idx,...].float(), float(torch.sum(self.rho[idx,...].real))
-        
+    def get_data(self):
+        outer_list=[]
+        for idx in range(len(self.b)):
+            outer=np.outer(self.b[idx,...],self.b[idx,...].conj())
+            outer=outer[abs(self.Mask)>0]
+            outer=outer.ravel()
+            
+            outer=torch.cat((torch.tensor(outer.real),torch.tensor(outer.imag)),dim=-1).float()
+            outer_list.append(outer.squeeze())
+        outer_list=torch.stack(outer_list)  
+            
+        return outer_list, self.rho
     
 
 
