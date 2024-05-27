@@ -63,12 +63,12 @@ class data_rho_loaded:
         return self.b[idx,...], self.rho[idx,...], torch.sum(self.rho[idx,...])
 
 
-class DataLoader_c(DataLoader_c):
-    def __init__(training_data_unlab,batch_size=Loading_batch_size,shuffle=True):
-        #self.num_chunks=training_data_unlab.shape[0]//batch_size
-        self.training_data_unlab_b=torch.split(training_data_unlab.b, self.num_chunks)
-        self.training_data_unlab_rho=torch.split(training_data_unlab.rho, self.num_chunks)
-        self.curr_perm=torch.randperm(len(self.training_data_unlab_b))
+#class DataLoader_c():
+#    def __init__(training_data_unlab,batch_size=batch_size,shuffle=True):
+#        #self.num_chunks=training_data_unlab.shape[0]//batch_size
+#        self.training_data_unlab_b=torch.split(training_data_unlab.b, self.num_chunks)
+#        self.training_data_unlab_rho=torch.split(training_data_unlab.rho, self.num_chunks)
+#        self.curr_perm=torch.randperm(len(self.training_data_unlab_b))
 
 
 
@@ -609,22 +609,21 @@ def raw_img(rho, font_size=50, file_name=None, xpix=31, ypix=21,WAND=False,figsi
         plt.show()
 
 #generates data using sensing matrix in locat 
-def Generate_data_pnas(locat, amount, S=4, seed=0):
+def Generate_data_pnas(locat, amount, S=4, seed=0, pixels='One-hot'):
     np.random.seed(seed)    
     try:
         medium= np.array(mat73.loadmat(locat+'/rtt.mat')['Artt'])
-    except:
-        try:
-            medium= np.array(mat73.loadmat(locat+'/rtt.mat')['A0'])
 
-        except:
-            print('No medium found')
+    except:
+        print('No medium found')
 
     data_rho=np.zeros((amount,400))
     #data_b=np.zeros((amount,631))
-    
     for i in range(amount):
-        data_rho[i][:S]=1
+        if pixels=='One-hot':
+            data_rho[i][:S]=1
+        elif piexls=='Gaussian':
+            data_rho[i][:S]=np.random.randn(S)
         perm = np.random.permutation(400)
         data_rho[i]=data_rho[i][perm]
     data_b=medium@data_rho.T
@@ -673,3 +672,6 @@ def reformat_sweep_for_1_run(param_dict):
     return new_dict
 
     
+
+def KL_divergence(mean, logvar):
+    return -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())

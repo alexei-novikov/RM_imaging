@@ -145,7 +145,7 @@ def encoder_decoder(config=None):
         if args.unlabeled_data<=80000:  
             trainloader_unlab=H.DataLoader_c(training_data_unlab,batch_size=Loading_batch_size,shuffle=True)
         else:
-            trainloader_unlab=DataLoader(training_data_unlab,batch_size=Loading_batch_size,shuffle=True,num_workers=8, pin_memory=True)
+            trainloader_unlab=DataLoader(training_data_unlab,batch_size=Loading_batch_size,shuffle=True,num_workers=0, pin_memory=True)
         valloader=DataLoader(val_data,batch_size=len(val_data),shuffle=False)
         
         dummy=nn.Linear(242, 651,bias=False)
