@@ -38,28 +38,28 @@ L1=[800,750, 700, 650, 600, 300,  300, 300, 300,  300, 300, 300, 400, 800, 1200]
 #L1_old_data=[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]
 parameters_dict = {
     'hidden_dims': {
-        'values' :[[512]*11],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
+        'values' :[[500,500,500,300,300,300,400,800]],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
     },          
     'dropout':{'values':[.25]}, #default 0
-    'num_epochs' :{ 'values': [5000] },#number of data passes
+    'num_epochs' :{ 'values': [3000] },#number of data passes
     'seed':{'values':[0]},
     'data_type': {'values': ['PNAS-regime_all_seeds']},#PNAS-highcoh_regime_all_seeds,PNAS-regime_all_seeds,PNAS-lowcoh_regime_all_seeds,PNAS-regime_all_seeds
     'net_type': {'values':['NL_L']},#model type.'fc_NC', recurrent_out' 'fc', 'linear', 'conv' (conv has not been updated since 10/10/2023
     'labeled_data': {'values': [0]},#what amountof the data to use
-    'unlabeled_data' : {'values' :[5000]},#what amount of the data to use
-    'Data_locat':{'values':['small_net_experiments']},#where the data is located
+    'unlabeled_data' : {'values' :[160000]},#what amount of the data to use
+    'Data_locat':{'values':['GELMA_long_bigdata']},#where the data is located
     'l1_weight' :{'values': [5e-5]},
     'out_encoder':{'values':['sigmoid']},#Sigmoid
     'L1_rescaling':{'values':[False]},
     'L1_burn_time':{'values':[20]},
     'activation':{'values':['relu']},#relu sigmoidnvidi
-    'G_0_intiailization':{'values':[True]},
+    'G_0_intiailization':{'values':[False]},
     'Dict_first_epochs':{'values':[0]},
     'weight_decay':{'values':[0.01]},
     'sch':{'values':[False]},#StepLR, MultiStepLR, ExponentialLR, CosineAnnealingLR, ReduceLROnPlateau
     'optimizer':{'values':['AdamW']},#Adam, SGD
     'Final_batch':{'values':[True]},
-    'batch_size':{'values':[5000]},
+    'batch_size':{'values':[128]},
     'lin_type_decoder':{'values':['real']},#real, complex
     'root_MSE':{'values':[True]},
     'GELMA':{'values':[5e-5]},
