@@ -36,5 +36,5 @@ if __name__ == "__main__":
 
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    sweep_id ='zlqebg93'
+    sweep_id ='jtueiqep'
     wandb.agent(sweep_id, C.encoder_decoder, project=project,count=1)
