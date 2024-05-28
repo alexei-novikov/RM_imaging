@@ -38,9 +38,9 @@ class data_rho_loaded:
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
         self.b=torch.cat((torch.tensor(self.b.real),torch.tensor(self.b.imag)),dim=-1).float()
 
-            
-        #self.rho=self.rho.to(device)
-        #self.b=self.b.to(device)
+        if prop<=1.0:
+            self.rho=self.rho.to(device)
+            self.b=self.b.to(device)
     
 
     def Check_data(self,medium):
@@ -63,9 +63,17 @@ class data_rho_loaded:
         return self.b[idx,...], self.rho[idx,...], torch.sum(self.rho[idx,...])
 
 
+#class DataLoader_c():
+#    def __init__(training_data_unlab,batch_size=batch_size,shuffle=True):
+#        #self.num_chunks=training_data_unlab.shape[0]//batch_size
+#        self.training_data_unlab_b=torch.split(training_data_unlab.b, self.num_chunks)
+#        self.training_data_unlab_rho=torch.split(training_data_unlab.rho, self.num_chunks)
+#        self.curr_perm=torch.randperm(len(self.training_data_unlab_b))
+
+
 
 class data_rho_CC(data_rho_loaded):
-    def __init__(self,data_path ,prop,sparsity=4, seed=0):
+    def __init__(self,data_path ,prop,sparsity=4, seed=0, medium='Random'):
     
         if 'PNAS' in data_path and "train" in data_path:
             self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=seed)
@@ -77,7 +85,7 @@ class data_rho_CC(data_rho_loaded):
 
 
         if sparsity==1:
-            self.rho, self.b=Generate_data_pnas_EYE(self.data_path)
+            self.rho, self.b=Generate_data_pnas_EYE(self.data_path, medium=medium)
         self.Mask=np.array(mat73.loadmat(self.data_path+'/M.mat')['M'])
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
 
@@ -92,7 +100,18 @@ class data_rho_CC(data_rho_loaded):
         outer=outer[abs(self.Mask)>0]
         outer=outer.ravel()
         return torch.cat((torch.tensor(outer.real),torch.tensor(outer.imag)),dim=-1).float(),self.rho[idx,...].float(), float(torch.sum(self.rho[idx,...].real))
-        
+    def get_data(self):
+        outer_list=[]
+        for idx in range(len(self.b)):
+            outer=np.outer(self.b[idx,...],self.b[idx,...].conj())
+            outer=outer[abs(self.Mask)>0]
+            outer=outer.ravel()
+            
+            outer=torch.cat((torch.tensor(outer.real),torch.tensor(outer.imag)),dim=-1).float()
+            outer_list.append(outer.squeeze())
+        outer_list=torch.stack(outer_list)  
+            
+        return outer_list, self.rho
     
 
 
@@ -590,22 +609,21 @@ def raw_img(rho, font_size=50, file_name=None, xpix=31, ypix=21,WAND=False,figsi
         plt.show()
 
 #generates data using sensing matrix in locat 
-def Generate_data_pnas(locat, amount, S=4, seed=0):
+def Generate_data_pnas(locat, amount, S=4, seed=0, pixels='One-hot'):
     np.random.seed(seed)    
     try:
         medium= np.array(mat73.loadmat(locat+'/rtt.mat')['Artt'])
-    except:
-        try:
-            medium= np.array(mat73.loadmat(locat+'/rtt.mat')['A0'])
 
-        except:
-            print('No medium found')
+    except:
+        print('No medium found')
 
     data_rho=np.zeros((amount,400))
     #data_b=np.zeros((amount,631))
-    
     for i in range(amount):
-        data_rho[i][:S]=1
+        if pixels=='One-hot':
+            data_rho[i][:S]=1
+        elif piexls=='Gaussian':
+            data_rho[i][:S]=np.random.randn(S)
         perm = np.random.permutation(400)
         data_rho[i]=data_rho[i][perm]
     data_b=medium@data_rho.T
@@ -613,16 +631,12 @@ def Generate_data_pnas(locat, amount, S=4, seed=0):
 
     return data_rho, data_b.T
 
-def Generate_data_pnas_EYE(locat):
-    try:
+def Generate_data_pnas_EYE(locat, medium='Random'):
+    if medium=='Random':
         medium= np.array(mat73.loadmat(locat+'/rtt.mat')['Artt'])
-    except:
-        try:
-            medium= np.array(mat73.loadmat(locat+'/rtt.mat')['A0'])
-
-        except:
-            print('No medium found')
-
+    else:
+        medium= np.array(mat73.loadmat(locat+'/G_0.mat')['A0'])
+        
     data_rho=np.eye(400)
     data_b=medium@data_rho.T
     print(f"Medium: {medium.shape}, Rho: {data_rho.shape}, B: {data_b.T.shape}")
@@ -658,3 +672,6 @@ def reformat_sweep_for_1_run(param_dict):
     return new_dict
 
     
+
+def KL_divergence(mean, logvar):
+    return -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())

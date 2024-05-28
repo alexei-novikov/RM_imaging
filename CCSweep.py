@@ -38,10 +38,10 @@ L1=[800,750, 700, 650, 600, 300,  300, 300, 300,  300, 300, 300, 400, 800, 1200]
 #L1_old_data=[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]
 parameters_dict = {
     'hidden_dims': {
-        'values' :[[100,100, 100, 100,100,100,100,100,100,100,100,100,100,100,500],[500,500, 500, 300, 300, 400,800],[2500,2500,2500,1500,1500,2000,4000]],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
+        'values' :[[512]*11],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
     },          
     'dropout':{'values':[.25]}, #default 0
-    'num_epochs' :{ 'values': [100000] },#number of data passes
+    'num_epochs' :{ 'values': [5000] },#number of data passes
     'seed':{'values':[0]},
     'data_type': {'values': ['PNAS-regime_all_seeds']},#PNAS-highcoh_regime_all_seeds,PNAS-regime_all_seeds,PNAS-lowcoh_regime_all_seeds,PNAS-regime_all_seeds
     'net_type': {'values':['NL_L']},#model type.'fc_NC', recurrent_out' 'fc', 'linear', 'conv' (conv has not been updated since 10/10/2023
@@ -59,7 +59,7 @@ parameters_dict = {
     'sch':{'values':[False]},#StepLR, MultiStepLR, ExponentialLR, CosineAnnealingLR, ReduceLROnPlateau
     'optimizer':{'values':['AdamW']},#Adam, SGD
     'Final_batch':{'values':[True]},
-    'batch_size':{'values':[128]},
+    'batch_size':{'values':[5000]},
     'lin_type_decoder':{'values':['real']},#real, complex
     'root_MSE':{'values':[True]},
     'GELMA':{'values':[5e-5]},

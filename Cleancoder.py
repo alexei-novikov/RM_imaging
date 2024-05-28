@@ -137,14 +137,16 @@ def encoder_decoder(config=None):
         #10kdata\approx 2.26GB
 
         Loading_batch_size=args.batch_size
-        trainloader=DataLoader(training_data,batch_size=Loading_batch_size,shuffle=True,num_workers=16, pin_memory=True)
         if 'MDS' not in args.data_type:
             training_data.Check_data(medium)
             training_data_unlab.Check_data(medium)
             val_data.Check_data(medium)
-        
-        trainloader_unlab=DataLoader(training_data_unlab,batch_size=Loading_batch_size,shuffle=True,num_workers=16, pin_memory=True)
-        valloader=DataLoader(val_data,batch_size=len(val_data),shuffle=False,num_workers=1, pin_memory=True)
+        trainloader=DataLoader(training_data,batch_size=Loading_batch_size,shuffle=True,num_workers=8, pin_memory=True)      
+        if args.unlabeled_data<=80000:  
+            trainloader_unlab=H.DataLoader_c(training_data_unlab,batch_size=Loading_batch_size,shuffle=True)
+        else:
+            trainloader_unlab=DataLoader(training_data_unlab,batch_size=Loading_batch_size,shuffle=True,num_workers=0, pin_memory=True)
+        valloader=DataLoader(val_data,batch_size=len(val_data),shuffle=False)
         
         dummy=nn.Linear(242, 651,bias=False)
         dummy.to(device)
@@ -311,7 +313,8 @@ def encoder_decoder(config=None):
                             param.requires_grad = True
                     
                         encoder_loss_avg=0
-                        for batch, (b,rho,num_targets) in enumerate(trainloader_unlab):
+
+                        for batch, (b,rho,num_targets) in enumerate(trainloader_unlab):    
                             b=b.to(device)
                             b=b.squeeze()
                             rho=rho.to(device)    

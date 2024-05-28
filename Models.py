@@ -40,6 +40,7 @@ class mod_relu(torch.nn.Module):
 
 
 
+
 #linear layer wrapper for same signatrue as complex
 class linear_layer_wrapper(nn.Module):
     def __init__(self, in_dim, out_dim, bias=True, activation='relu',threshold_val=False, offset=False,dropout=0.0, batch_normalization=True):
@@ -148,6 +149,19 @@ class complex_linear_layer(nn.Module):
         return torch.cat((real_out,imag_out),-1) 
 
     
+class variational_enc(torch.nn.Module):
+    def __init__(self, in_dim, hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True,threshold_val=1e-3, offset=True,dropout=0, out_scaling='L2', batch_normalization=True):
+        super(variational_enc,self).__init__()
+        fc_net_extra
+        self.shared=fc_net_batch(in_dim, [hidden_dims[0]], hidden_dims[1], net_type, linear_type, activation, bias, threshold_val, offset, dropout, out_scaling, batch_normalization)
+        self.enc_mean=fc_net_batch(hidden_dims[1], hidden_dims[2:], out_dim, net_type, linear_type, activation, bias, threshold_val, offset, dropout, out_scaling, batch_normalization)
+        self.enc_logvar=fc_net_batch(hidden_dims[1], hidden_dims[:2], out_dim, net_type, linear_type, activation, bias, threshold_val, offset, dropout, out_scaling, batch_normalization)
+    def forward(self, x):
+        shared=self.shared(x.squeeze())
+        mean=self.enc_mean(shared.squeeze())
+        logvar=self.enc_logvar(shared.squeeze())
+        return mean, logvar
+
 
 
 #Fc=fully connected. 
