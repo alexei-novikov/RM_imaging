@@ -283,9 +283,28 @@ class fc_net_batch(nn.Module):
 #Same as fc_net_batch but includes a batch normalization layer in the output
 class fc_net_extra(fc_net_batch):
     def __init__(self, in_dim, hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True,threshold_val=1e-3, offset=True,dropout=0, out_scaling='L2', batch_normalization=True):
-        super().__init__(in_dim, hidden_dims, out_dim, net_type='fc',linear_type=linear_type, activation=activation, bias=True,threshold_val=1e-3, offset=True,dropout=0, out_scaling='L2', batch_normalization=True)
+        super().__init__(in_dim, hidden_dims, out_dim, net_type='fc',linear_type=linear_type, activation=activation, bias=True,threshold_val=1e-3, offset=True,dropout=0, out_scaling=out_scaling, batch_normalization=True)
         self.extra_batch=nn.BatchNorm1d(int(out_dim*2))
+
+        if net_type=='conv':
+            self.num_conv_layers=3
+            self.conv_layers=nn.ModuleList([nn.Sequential(                
+            nn.Conv2d(3,3,7,padding='same'),
+            nn.BatchNorm2d(3),
+            nn.ReLU()) for i in range(self.num_conv_layers-1)])  
+            self.conv_layers.append(nn.Conv2d(3,1,7,padding='same')) 
+        else:
+            self.num_conv_layers=0 
     def forward(self, x):
+        x=x.squeeze()
+        if self.num_conv_layers>0:
+            x=x.view(-1, 10,int(len(x[1])/10))
+            x=x.unsqueeze(1)
+            x=x.repeat(1,3,1,1)
+            for i in range(self.num_conv_layers):
+                x=self.conv_layers[i](x)
+            x=x.squeeze()
+            x=x.view(-1, x.shape[1]*x.shape[2])
         out=super().forward(x)
         out=self.extra_batch(out.squeeze())
         return out
