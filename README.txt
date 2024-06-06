@@ -1,4 +1,6 @@
-The .yml file is the conda environment I use. If you make a new conda environment using it you should have all the packages you need to run the code. The models.py file contains models, and the Helpers.py file contains assorted helper functions for data manipulation and sending output to wandb.
+The .yml file is the conda environment I use. If you make a new conda environment with:
+conda env create --name env_name --file=environment.yml
+you should have all the packages you need to run the code. The models.py file contains models, and the Helpers.py file contains assorted helper functions for data manipulation and sending output to wandb.
 
 The multi_dict.ipynb file is close to a minimal training code example. It should run with no changes. 
 
