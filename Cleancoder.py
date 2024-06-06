@@ -60,7 +60,6 @@ def encoder_decoder(config=None):
             training_data=H.data_rho_loaded(data_path+'/train',max(args.labeled_data/80000,.0001), sparsity=s,seed=args.seed+50)
             training_data_unlab=H.data_rho_loaded(data_path+'/train',max(args.unlabeled_data/80000,.0001),sparsity=s,seed=args.seed)
             val_data=H.data_rho_loaded(data_path+'/val', 3000/8000,sparsity=s)
-    
             
 
 
@@ -143,7 +142,7 @@ def encoder_decoder(config=None):
             val_data.Check_data(medium)
         trainloader=DataLoader(training_data,batch_size=Loading_batch_size,shuffle=True,num_workers=0, pin_memory=True)      
         if args.unlabeled_data<=80000:  
-            trainloader_unlab=H.DataLoader_c(training_data_unlab,batch_size=Loading_batch_size,shuffle=True)
+            trainloader_unlab=DataLoader(training_data_unlab,batch_size=Loading_batch_size,shuffle=True)
         else:
             trainloader_unlab=DataLoader(training_data_unlab,batch_size=Loading_batch_size,shuffle=True,num_workers=0, pin_memory=True)
         valloader=DataLoader(val_data,batch_size=len(val_data),shuffle=False)
