@@ -63,13 +63,6 @@ class data_rho_loaded:
         return self.b[idx,...], self.rho[idx,...], torch.sum(self.rho[idx,...])
 
 
-#class DataLoader_c():
-#    def __init__(training_data_unlab,batch_size=batch_size,shuffle=True):
-#        #self.num_chunks=training_data_unlab.shape[0]//batch_size
-#        self.training_data_unlab_b=torch.split(training_data_unlab.b, self.num_chunks)
-#        self.training_data_unlab_rho=torch.split(training_data_unlab.rho, self.num_chunks)
-#        self.curr_perm=torch.randperm(len(self.training_data_unlab_b))
-
 
 
 class data_rho_CC(data_rho_loaded):
@@ -114,6 +107,21 @@ class data_rho_CC(data_rho_loaded):
         return outer_list, self.rho
     
 
+
+
+class data_rho_CC_XY_targs(data_rho_CC):
+    def __init__(self,data_path ,prop,sparsity=4, seed=0, medium='Random'):
+        super().__init__(data_path, prop, sparsity, seed, medium)
+        self.rho=np.array(mat73.loadmat(self.data_path+'grid.mat')['full_grid'])
+        self.rho=torch.tensor(self.rho).float()
+        self.rho[:,0]=(self.rho[:,0]-min(self.rho[:,0])/(max(self.rho[:,0])-min(self.rho[:,0])))
+        self.rho[:,1]=(self.rho[:,1]-min(self.rho[:,1])/(max(self.rho[:,1])-min(self.rho[:,1])))
+    def __getitem__(self, idx):
+
+        outer=np.outer(self.b[idx,...],self.b[idx,...].conj())
+        outer=outer[abs(self.Mask)>0]
+        outer=outer.ravel()
+        return torch.cat((torch.tensor(outer.real),torch.tensor(outer.imag)),dim=-1).float(), self.rho[idx,...].float(), float(torch.sum(self.rho[idx,...].real))
 
 
 
@@ -484,6 +492,34 @@ def plot_2_imgs(rho, rho_hat,ind=9,figsize=8,scaling='Linf',font_size=50, Single
     #cbar.remove()
     ax.tick_params(axis='both', **tick_params)
     plt.show()
+
+def plot_2_imgs_XY(rho, rho_hat,figsize=8,font_size=50,xpix=31, ypix=21, file_name=None):
+    plt.close()
+    figsize=(figsize*2,figsize)
+    fig, axes=plt.subplots(nrows= 1, ncols= 2,figsize=figsize)
+
+    tick_params = {'labelsize': font_size}
+    output=rho.squeeze()
+    ax=axes[0]
+    true_x=rho[:,0].cpu().detach().numpy()
+    true_y=rho[:,1].cpu().detach().numpy()
+
+
+    #plt.title('true', fontsize=font_size)
+    ax.tick_params(axis='both', **tick_params)
+    ax.scatter(true_x, true_y)
+    x_pred=rho_hat[:,0].cpu().detach().numpy()
+    y_pred=rho_hat[:,1].cpu().detach().numpy()
+            
+
+    ax=axes[1]
+    ax.scatter(x_pred, y_pred)
+    plt.show()
+
+
+
+
+
 
 #plots km image given a single config and sensing matrix
 def KM_img(rho, sensing,figsize=8,scaling='Linf',font_size=50, file_name=None, xpix=31, ypix=21,WAND=False):
