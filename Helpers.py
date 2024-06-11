@@ -514,6 +514,7 @@ def plot_2_imgs_XY(rho, rho_hat,figsize=8,font_size=50,xpix=31, ypix=21, file_na
 
     ax=axes[1]
     ax.scatter(x_pred, y_pred)
+    ax.tick_params(axis='both', **tick_params)
     plt.show()
 
 
