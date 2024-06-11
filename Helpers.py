@@ -114,8 +114,8 @@ class data_rho_CC_XY_targs(data_rho_CC):
         super().__init__(data_path, prop, sparsity, seed, medium)
         self.rho=np.array(mat73.loadmat(self.data_path+'grid.mat')['full_grid'])
         self.rho=torch.tensor(self.rho).float()
-        self.rho[:,0]=(self.rho[:,0]-min(self.rho[:,0])/(max(self.rho[:,0])-min(self.rho[:,0])))
-        self.rho[:,1]=(self.rho[:,1]-min(self.rho[:,1])/(max(self.rho[:,1])-min(self.rho[:,1])))
+        self.rho[:,0]=(self.rho[:,0]-min(self.rho[:,0]))/(max(self.rho[:,0])-min(self.rho[:,0]))
+        self.rho[:,1]=(self.rho[:,1]-min(self.rho[:,1]))/(max(self.rho[:,1])-min(self.rho[:,1]))
     def __getitem__(self, idx):
 
         outer=np.outer(self.b[idx,...],self.b[idx,...].conj())
