@@ -67,18 +67,24 @@ class data_rho_loaded:
 
 class data_rho_CC(data_rho_loaded):
     def __init__(self,data_path ,prop,sparsity=4, seed=0, medium='Random'):
-    
-        if 'PNAS' in data_path and "train" in data_path:
-            self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=seed)
+        if 'train' in data_path:
             self.data_path=data_path[:-5]
-
-        elif 'PNAS' in data_path and 'val' in data_path:
-            self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, S=sparsity,seed=100)
+        elif 'val' in data_path:
             self.data_path=data_path[:-3]
+
 
 
         if sparsity==1:
             self.rho, self.b=Generate_data_pnas_EYE(self.data_path, medium=medium)
+        
+        elif 'PNAS' in data_path and "train" in data_path:
+            self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=seed)
+
+        elif 'PNAS' in data_path and 'val' in data_path:
+            self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, S=sparsity,seed=100)
+
+
+        
         self.Mask=np.array(mat73.loadmat(self.data_path+'/M.mat')['M'])
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
 
@@ -110,9 +116,9 @@ class data_rho_CC(data_rho_loaded):
 
 
 class data_rho_CC_XY_targs(data_rho_CC):
-    def __init__(self,data_path ,prop,sparsity=4, seed=0, medium='Random'):
+    def __init__(self,data_path ,prop,sparsity=4, seed=0, medium='Random', grid='grid.mat'):
         super().__init__(data_path, prop, sparsity, seed, medium)
-        self.rho=np.array(mat73.loadmat(self.data_path+'grid.mat')['full_grid'])
+        self.rho=np.array(mat73.loadmat(self.data_path+grid)['full_grid'])
         self.rho=torch.tensor(self.rho).float()
         self.rho[:,0]=(self.rho[:,0]-min(self.rho[:,0]))/(max(self.rho[:,0])-min(self.rho[:,0]))
         self.rho[:,1]=(self.rho[:,1]-min(self.rho[:,1]))/(max(self.rho[:,1])-min(self.rho[:,1]))
@@ -654,14 +660,14 @@ def Generate_data_pnas(locat, amount, S=4, seed=0, pixels='One-hot'):
     except:
         print('No medium found')
 
-    data_rho=np.zeros((amount,400))
+    data_rho=np.zeros((amount,medium.shape[-1]))
     #data_b=np.zeros((amount,631))
     for i in range(amount):
         if pixels=='One-hot':
             data_rho[i][:S]=1
-        elif piexls=='Gaussian':
+        elif pixels=='Gaussian':
             data_rho[i][:S]=np.random.randn(S)
-        perm = np.random.permutation(400)
+        perm = np.random.permutation(medium.shape[-1])
         data_rho[i]=data_rho[i][perm]
     data_b=medium@data_rho.T
     print(f"Medium: {medium.shape}, Rho: {data_rho.shape}, B: {data_b.T.shape}")
@@ -674,7 +680,7 @@ def Generate_data_pnas_EYE(locat, medium='Random'):
     else:
         medium= np.array(mat73.loadmat(locat+'/G_0.mat')['A0'])
         
-    data_rho=np.eye(400)
+    data_rho=np.eye(medium.shape[-1])
     data_b=medium@data_rho.T
     print(f"Medium: {medium.shape}, Rho: {data_rho.shape}, B: {data_b.T.shape}")
 
