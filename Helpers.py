@@ -19,6 +19,7 @@ import random
 import torch.optim as optim
 import mat73
 import re
+import copy
 import torch.optim.lr_scheduler as lr_scheduler
 from sklearn.preprocessing import StandardScaler
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -120,6 +121,14 @@ class data_rho_CC_XY_targs(data_rho_CC):
         super().__init__(data_path, prop, sparsity, seed, medium)
         self.rho=np.array(mat73.loadmat(self.data_path+grid)['full_grid'])
         self.rho=torch.tensor(self.rho).float()
+        self.intercept_x=self.rho[:,0].min()
+        self.slope_x=(self.rho[:,0].max()-(self.rho[:,0].min()))
+        self.intercept_y=(self.rho[:,1].min())
+        self.slope_y=((self.rho[:,1].max())-(self.rho[:,1].min()))
+        self.intercept_x=copy.deepcopy(self.intercept_x)
+        self.slope_x=copy.deepcopy(self.slope_x)
+        self.intercept_y=copy.deepcopy(self.intercept_y)
+        self.slope_y=copy.deepcopy(self.slope_y)
         self.rho[:,0]=(self.rho[:,0]-min(self.rho[:,0]))/(max(self.rho[:,0])-min(self.rho[:,0]))
         self.rho[:,1]=(self.rho[:,1]-min(self.rho[:,1]))/(max(self.rho[:,1])-min(self.rho[:,1]))
     def __getitem__(self, idx):
@@ -523,6 +532,28 @@ def plot_2_imgs_XY(rho, rho_hat,figsize=8,font_size=50,xpix=31, ypix=21, file_na
     ax.tick_params(axis='both', **tick_params)
     plt.show()
 
+
+def plot_2_imgs_XY_displacments(rho, rho_hat,figsize=8,font_size=50,xpix=31, ypix=21, file_name=None):
+    plt.close()
+    figsize=(figsize,figsize)
+    fig, axes=plt.subplots(nrows= 1, ncols= 1,figsize=figsize)
+    ax=plt.gca()
+    tick_params = {'labelsize': font_size}
+    output=rho.squeeze()
+    true_x=rho[:,0].cpu().detach().numpy()
+    true_y=rho[:,1].cpu().detach().numpy()
+
+
+    #plt.title('true', fontsize=font_size)
+    ax.tick_params(axis='both', **tick_params)
+    x_pred=rho_hat[:,0].cpu().detach().numpy()
+    y_pred=rho_hat[:,1].cpu().detach().numpy()
+    plt.quiver(x_pred, y_pred, true_x-x_pred, true_y-y_pred,label='Displacement',angles='xy', scale_units='xy', scale=1)
+    ax.scatter(true_x, true_y, label='True')
+    ax.scatter(x_pred, y_pred, label='Predicted')
+    ax.tick_params(axis='both', **tick_params)
+    plt.legend()
+    plt.show()
 
 
 
