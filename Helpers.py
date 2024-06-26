@@ -28,13 +28,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #Data set class. Should contain your data, and when __getitem__ is called, it should 
 #return your data formatted for input into a model
 class data_rho_loaded:
-    def __init__(self,data_path ,prop,sparsity=4,seed=0):
+    def __init__(self,data_path ,prop,sparsity=4,seed=0, pixels='One-hot'):
         if 'PNAS' in data_path and "train" in data_path:
-            self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=seed)
+            self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=seed,pixels=pixels )
             self.data_path=data_path[:-5]
 
         elif 'PNAS' in data_path and 'val' in data_path:
-            self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, S=sparsity,seed=100)
+            self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, S=sparsity,seed=100,pixels=pixels)
             self.data_path=data_path[:-3]
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
         self.b=torch.cat((torch.tensor(self.b.real),torch.tensor(self.b.imag)),dim=-1).float()
@@ -698,6 +698,7 @@ def Generate_data_pnas(locat, amount, S=4, seed=0, pixels='One-hot'):
             data_rho[i][:S]=1
         elif pixels=='Gaussian':
             data_rho[i][:S]=np.random.randn(S)
+            data_rho[i]=abs(data_rho[i])/sum(abs(data_rho[i]))
         perm = np.random.permutation(medium.shape[-1])
         data_rho[i]=data_rho[i][perm]
     data_b=medium@data_rho.T
