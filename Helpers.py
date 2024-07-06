@@ -696,6 +696,8 @@ def Generate_data_pnas(locat, amount, S=4, seed=0, pixels='One-hot'):
     for i in range(amount):
         if pixels=='One-hot':
             data_rho[i][:S]=1
+        elif pixels=='soft':
+            data_rho[i][:S]=1/S
         elif pixels=='Gaussian':
             data_rho[i][:S]=np.random.randn(S)
             data_rho[i]=abs(data_rho[i])/sum(abs(data_rho[i]))

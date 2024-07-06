@@ -22,7 +22,7 @@ from sklearn.preprocessing import StandardScaler
 import Models as M
 import Helpers as H
 import Cleancoder as C
-
+import Unlab as U
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -34,26 +34,30 @@ sweep_config = {
 #Coherence regime data_types 'PNAS-highcoh_regime_all_seeds','PNAS-regime_all_seeds','PNAS-lowcoh_regime_all_seeds','PNAS-regime_all_seeds]
 
 #L1=[500, 750, 1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]
-L1=[800,750, 700, 650, 600, 300,  300, 300, 300,  300, 300, 300, 400, 800, 1200]
+L1=[500,500,500,300,300,400,800]
+L2=[int(i/2) for i in L1]
+L2[-1]=L2[-1]*2
+L3=[int(i/2) for i in L2]
+L3[-1]=L3[-1]*2
 #L1_old_data=[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]
 parameters_dict = {
     'hidden_dims': {
-        'values' :[],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
+        'values' :[L1, L2, L3],#[1000,950, 900, 850, 800, 400, 400, 400, 400, 800, 1000]]#[[encoder], [decoder]] 
     },          
     'dropout':{'values':[.25]}, #default 0
-    'num_epochs' :{ 'values': [1000] },#number of data passes
+    'num_epochs' :{ 'values': [3000] },#number of data passes
     'seed':{'values':[0]},
-    'data_type': {'values': ['PNAS-lowcoh_regime_all_seeds']},#PNAS-highcoh_regime_all_seeds,PNAS-regime_all_seeds,PNAS-lowcoh_regime_all_seeds,PNAS-regime_all_seeds
+    'data_type': {'values': ['PNAS-regime_all_seeds']},#PNAS-highcoh_regime_all_seeds,PNAS-regime_all_seeds,PNAS-lowcoh_regime_all_seeds,PNAS-regime_all_seeds
     'net_type': {'values':['NL_L']},#model type.'fc_NC', recurrent_out' 'fc', 'linear', 'conv' (conv has not been updated since 10/10/2023
     'labeled_data': {'values': [0]},#what amountof the data to use
-    'unlabeled_data' : {'values' :[40000]},#what amount of the data to use
-    'Data_locat':{'values':['smoldata']},#where the data is located
+    'unlabeled_data' : {'values' :[20000]},#what amount of the data to use
+    'Data_locat':{'values':['P2_final']},#where the data is located
     'l1_weight' :{'values': [5e-5]},
     'out_encoder':{'values':['sigmoid']},#Sigmoid
     'L1_rescaling':{'values':[False]},
     'L1_burn_time':{'values':[20]},
     'activation':{'values':['relu']},#relu sigmoidnvidi
-    'G_0_intiailization':{'values':[False]},
+    'G_0_intiailization':{'values':[True]},
     'Dict_first_epochs':{'values':[0]},
     'weight_decay':{'values':[0.01]},
     'sch':{'values':[False]},#StepLR, MultiStepLR, ExponentialLR, CosineAnnealingLR, ReduceLROnPlateau
@@ -62,7 +66,7 @@ parameters_dict = {
     'batch_size':{'values':[128]},
     'lin_type_decoder':{'values':['real']},#real, complex
     'root_MSE':{'values':[True]},
-    'GELMA':{'values':[5e-8]},
+    'GELMA':{'values':[5e-5]},
     'lr':{'values':[1e-3]},
 }
 #N alpha/B should be constatnt
@@ -99,7 +103,7 @@ if __name__ == "__main__":
     EXP='dictionary_final'
 
     if False:
-        C.encoder_decoder(H.reformat_sweep_for_1_run(parameters_dict))                        
+        U.encoder_decoder(H.reformat_sweep_for_1_run(parameters_dict))                        
     elif EXP=='dictionary_final':
         key='89a70fbc572a495206df640bd6c9cbf2a4a0dcaa'
         #parameters_dict['key']={'values':[key]}
@@ -108,4 +112,4 @@ if __name__ == "__main__":
         project='Fully unlab 2.0'
         sweep_id = wandb.sweep(dictionary_config, project=project)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        wandb.agent(sweep_id, C.encoder_decoder, count=50)
+        wandb.agent(sweep_id, U.encoder_decoder, count=50)
