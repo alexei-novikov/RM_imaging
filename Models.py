@@ -40,6 +40,18 @@ class mod_relu(torch.nn.Module):
 
 
 
+#Linear layer with normalized columns
+class norm_linear(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(norm_linear, self).__init__()
+        self.weight=nn.Parameter((torch.rand(out_dim, in_dim)-.5)/(in_dim**(1/2)))
+    def forward(self,x):
+        weights=F.normalize(self.weight,dim=0)
+        out=torch.matmul(x,weights.t())
+        out=out.squeeze()
+        out=F.normalize(out,dim=-1)
+        return out
+
 
 #linear layer wrapper for same signatrue as complex
 class linear_layer_wrapper(nn.Module):

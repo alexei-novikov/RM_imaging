@@ -28,7 +28,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #Data set class. Should contain your data, and when __getitem__ is called, it should 
 #return your data formatted for input into a model
 class data_rho_loaded:
-    def __init__(self,data_path ,prop,sparsity=4,seed=0, pixels='One-hot'):
+    def __init__(self,data_path ,prop,sparsity=4,seed=0, pixels='One-hot',normalize=False):
         if 'PNAS' in data_path and "train" in data_path:
             self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=seed,pixels=pixels )
             self.data_path=data_path[:-5]
@@ -43,6 +43,8 @@ class data_rho_loaded:
             self.rho=self.rho.to(device)
             self.b=self.b.to(device)
     
+        if normalize:
+            self.b=F.normalize(self.b, dim=-1)
 
     def Check_data(self,medium):
         rho=self.rho[:1000]
