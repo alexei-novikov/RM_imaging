@@ -43,7 +43,7 @@ from functorch.experimental import replace_all_batch_norm_modules_
 #%matplotlib inline
 
 cwd=os. getcwd()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 data_path=os.path.join(cwd,'Data/PNAS-regime_all_seeds/PNAS-regime_seed0')
 medium= np.array(mat73.loadmat(data_path+'/rtt.mat')['Artt'])
@@ -66,7 +66,7 @@ torch.__version__
 
 
 layers_list=[[2**i]*10 for i in range(6, 10)]
-unlabeled_data_list=[10000,20000]
+unlabeled_data_list=[40000]
 
 for layers in layers_list:
     for unlabeled_data in unlabeled_data_list:
@@ -116,6 +116,7 @@ for layers in layers_list:
 
 
         encoder=M.fc_net_extra(enc_dim, layers,outdim, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None,dropout=.5)
+        
         if Track_run:
             key='89a70fbc572a495206df640bd6c9cbf2a4a0dcaa' #enter your own key here
             wandb.login(key=key) 
@@ -159,7 +160,7 @@ for layers in layers_list:
             GELMA_net=M.fc_net_batch(training_data.b[0].shape[0]/2, GELMA_layers, training_data.b[0].shape[0]/2, net_type='fc',linear_type='real', activation='relu', bias=True, out_scaling=None, dropout=.5)
             optimizer_GELMA = torch.optim.Adam(GELMA_net.parameters(), lr=LR, maximize=True)
             GELMA_net.to(device)
-            GELMA_net=nn.DataParallel(GELMA_net)
+            #GELMA_net=nn.DataParallel(GELMA_net)
             GELMA_net.train()
         def f_col(batch):
             b=torch.stack([item[0] for item in batch])
