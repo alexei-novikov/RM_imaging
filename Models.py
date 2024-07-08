@@ -51,6 +51,18 @@ class norm_linear(nn.Module):
         out=out.squeeze()
         out=F.normalize(out,dim=-1)
         return out
+    def time_reverse(self, x):
+        weights=F.normalize(self.weight,dim=1)
+        weights_real, weights_imag=torch.split(weights.t(), int(weights.t().shape[1]/2), dim=-1)
+        weights_imag=-weights_imag
+        x_real, x_imag=torch.split(x, int(x.shape[1]/2), dim=-1)
+        out_real=torch.matmul(x_real,weights_real.t())-torch.matmul(x_imag,weights_imag.t())
+        out_imag=torch.matmul(x_real,weights_imag.t())+torch.matmul(x_imag,weights_real.t())
+        out=torch.cat((out_real,out_imag),-1)
+        out=out.squeeze()
+        return out
+    
+
 
 
 #linear layer wrapper for same signatrue as complex
