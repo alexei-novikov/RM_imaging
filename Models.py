@@ -73,6 +73,8 @@ class linear_layer_wrapper(nn.Module):
         out_dim=out_dim*2
         if activation=='relu' and batch_normalization:
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), nn.ReLU() ,nn.Dropout(dropout))
+        elif activation=='leaky' and batch_normalization:
+            self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), nn.LeakyReLU() ,nn.Dropout(dropout))
         elif activation=='relu' and not batch_normalization:
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias), nn.ReLU() ,nn.Dropout(dropout))
         elif activation=='sigmoid' and batch_normalization:
