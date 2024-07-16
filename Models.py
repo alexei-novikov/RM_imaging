@@ -77,6 +77,9 @@ class linear_layer_wrapper(nn.Module):
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias), nn.ReLU() ,nn.Dropout(dropout))
         elif activation=='sigmoid' and batch_normalization:
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), nn.Sigmoid() ,nn.Dropout(dropout))
+        elif activation=='mod_relu' and batch_normalization:
+            self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), mod_relu(int(out_dim)) ,nn.Dropout(dropout))
+
         elif activation=='Linear_layer':
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias))                                                   
     def forward(self,x):
@@ -122,6 +125,8 @@ class complex_linear_layer(nn.Module):
             self.activation=nn.Sigmoid()
         if activation=='tanh':
             self.activation=nn.Tanh()
+        if activation=='leaky':
+            self.activation=nn.LeakyReLU()
         if activation=='hardshrink':
             self.activation=nn.Hardshrink(5e-4)
         if activation=='Complex threshhold':
@@ -337,9 +342,10 @@ class fc_net_extra(fc_net_batch):
         return out
 
 class E_C_repeated(torch.nn.Module):
-    def __init__(self,  decoder, num_repeats, *encoder_params):
+    def __init__(self,  decoder, num_repeats, *encoder_params, **kwargs):
+        super(E_C_repeated,self).__init__()
         self.decoder=decoder
-        self.encoders = nn.ModuleList([fc_net_extra(*encoder_params) for i in range(num_repeats)])
+        self.encoders = nn.ModuleList([fc_net_extra(*encoder_params,**kwargs) for i in range(num_repeats)])
         self.leaky=nn.LeakyReLU()
     def forward(self, x):
         for i in range(len(self.encoders)):
@@ -349,7 +355,7 @@ class E_C_repeated(torch.nn.Module):
                 x_max, _=torch.max(abs(x), dim=-1, keepdim=True)
                 x=abs(x)/x_max
                 x=self.decoder(x)
-                
+        return x
         
 
 
