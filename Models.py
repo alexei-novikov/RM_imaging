@@ -38,8 +38,6 @@ class mod_relu(torch.nn.Module):
     def forward(self, x):
         return self.Relu(torch.abs(x) + self.b)           
 
-
-
 #Linear layer with normalized columns
 class norm_linear(nn.Module):
     def __init__(self, in_dim, out_dim):
@@ -306,6 +304,9 @@ class fc_net_batch(nn.Module):
 
 
 
+
+
+
 #Same as fc_net_batch but includes a batch normalization layer in the output
 class fc_net_extra(fc_net_batch):
     def __init__(self, in_dim, hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True,threshold_val=1e-3, offset=True,dropout=0, out_scaling='L2', batch_normalization=True):
@@ -334,6 +335,22 @@ class fc_net_extra(fc_net_batch):
         out=super().forward(x)
         out=self.extra_batch(out.squeeze())
         return out
+
+class E_C_repeated(torch.nn.Module):
+    def __init__(self,  decoder, num_repeats, *encoder_params):
+        self.decoder=decoder
+        self.encoders = nn.ModuleList([fc_net_extra(*encoder_params) for i in range(num_repeats)])
+        self.leaky=nn.LeakyReLU()
+    def forward(self, x):
+        for i in range(len(self.encoders)):
+            x=self.encoders[i](x)
+            if i!=len(self.encoders)-1:
+                x=self.leaky(x)
+                x_max, _=torch.max(abs(x), dim=-1, keepdim=True)
+                x=abs(x)/x_max
+                x=self.decoder(x)
+                
+        
 
 
 #Essentially just a wrapper for the fc_net_batch class. returns #FC_net_batch(x), Linear_layer(x)
