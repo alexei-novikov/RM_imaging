@@ -60,6 +60,22 @@ class norm_linear(nn.Module):
         out=out.squeeze()
         return out
     
+class norm_linear_complex(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(norm_linear_complex, self).__init__()
+        self.weight=nn.Parameter((torch.rand(out_dim, in_dim)-.5)/(in_dim**(1/2)))
+    
+    def forward(self,x):
+        x=x.squeeze()
+        weights=F.normalize(self.weight,dim=0)
+        weights=weights.t()
+        weights_real, weights_imag=torch.split(weights, int(weights.shape[1]/2), dim=-1)
+        x_real, x_imag=torch.split(x.squeeze(), int(x.shape[1]/2), dim=-1)
+        out_real=torch.matmul(x_real,weights_real)-torch.matmul(x_imag,weights_imag)
+        out_imag=torch.matmul(x_real,weights_imag)+torch.matmul(x_imag,weights_real)
+        out=torch.cat((out_real,out_imag),-1)
+        out=F.normalize(out,dim=-1)
+        return out
 
 
 
