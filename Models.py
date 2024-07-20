@@ -95,7 +95,6 @@ class linear_layer_wrapper(nn.Module):
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), nn.Sigmoid() ,nn.Dropout(dropout))
         elif activation=='mod_relu' and batch_normalization:
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), mod_relu(int(out_dim)) ,nn.Dropout(dropout))
-
         elif activation=='Linear_layer':
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias))                                                   
     def forward(self,x):
@@ -134,7 +133,6 @@ class complex_linear_layer(nn.Module):
             self.activation_str='complex'
         else:
             self.activation_str=activation
-
         if activation=='relu':
             self.activation=nn.ReLU()
         if activation=='sigmoid':
@@ -150,7 +148,11 @@ class complex_linear_layer(nn.Module):
         if activation=='mod_relu':
             self.activation=mod_relu(out_dim)
         elif activation=='linear_threshold':
-            self.activation=mod_relu(out_dim,rand_weights=False)            
+            self.activation=mod_relu(out_dim,rand_weights=False)  
+
+
+            
+                      
         if activation=='Linear_layer' or activation=='linear_threshold':
             self.real_layer=nn.Sequential(nn.Linear(self.in_dim,out_dim,bias=bias))
             self.imag_layer=nn.Sequential(nn.Linear(self.in_dim,out_dim,bias=bias)) 
@@ -326,7 +328,32 @@ class fc_net_batch(nn.Module):
 
 
 
+class channeled_lin_layers(nn.Module):
+    def __init__(self, in_dim, hidden_dims, out_dim, dropout=0):
+        super(channeled_lin_layers, self).__init__()
+        p=dropout
+        num_hidden_lays=len(hidden_dims)
+        width=hidden_dims[0]
+        self.input_layer=complex_linear_layer(in_dim, out_dim*width/2, bias=True, activation='mod_relu',threshold_val=1e-3, offset=True,dropout=p, batch_normalization=True)
+        self.layers = nn.ModuleList([nn.Sequential(nn.Conv1d(out_dim*width,out_dim*width, padding=0, kernel_size=1, stride=1, bias=True, groups=out_dim), nn.BatchNorm1d(out_dim*width), nn.ReLU(), nn.Dropout(p=p)) for i in range(num_hidden_lays)])
+        self.output=nn.Conv1d(out_dim*width,out_dim, padding=0, kernel_size=1, stride=1, bias=True, groups=out_dim)
+        self.sigmoid=nn.Sigmoid()
+#        self.extra_batch=nn.BatchNorm1d(int(out_dim)) better without
 
+    def forward(self, x):
+        out=x.squeeze()
+        out=self.input_layer(out)
+        out=out.unsqueeze(-1)
+
+        for layer in self.layers:
+            out = layer(out)
+        out=self.output(out)
+        out=out.squeeze()
+        #out=self.sigmoid(out)
+        #out=self.output(out)
+        #out=out.unsqueeze(1)
+        return out
+        
 
 #Same as fc_net_batch but includes a batch normalization layer in the output
 class fc_net_extra(fc_net_batch):
