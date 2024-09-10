@@ -22,18 +22,18 @@ import re
 import copy
 import torch.optim.lr_scheduler as lr_scheduler
 from sklearn.preprocessing import StandardScaler
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 #Data set class. Should contain your data, and when __getitem__ is called, it should 
 #return your data formatted for input into a model
 class data_rho_loaded:
     def __init__(self,data_path ,prop,sparsity=4,seed=0, pixels='One-hot',normalize=False):
-        if 'PNAS' in data_path and "train" in data_path:
+        if  "train" in data_path:
             self.rho, self.b=Generate_data_pnas(data_path[:-5],int(80000*prop), S=sparsity,seed=seed,pixels=pixels )
             self.data_path=data_path[:-5]
 
-        elif 'PNAS' in data_path and 'val' in data_path:
+        elif  'val' in data_path:
             self.rho, self.b=Generate_data_pnas(data_path[:-3],3000, S=sparsity,seed=100,pixels=pixels)
             self.data_path=data_path[:-3]
         self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
@@ -64,6 +64,35 @@ class data_rho_loaded:
         return(int(len(self.b)))
     def __getitem__(self, idx):
         return self.b[idx,...], self.rho[idx,...], torch.sum(self.rho[idx,...])
+
+
+class data_rho_pregen(data_rho_loaded):
+    def __init__(self,data_path ,prop,sparsity=4,seed=0, pixels='One-hot',normalize=False):
+        if 'train' in data_path:
+            self.data_path=data_path[:-5]
+        elif 'val' in data_path:
+            self.data_path=data_path[:-3]
+            
+        self.b=np.array(mat73.loadmat(self.data_path+'b.mat')['b'])
+        self.rho=np.array(mat73.loadmat(self.data_path+'rho.mat')['rho'])
+        if 'train' in data_path:
+            self.b=self.b[:int(80000*prop)]
+            self.rho=self.rho[:int(80000*prop)]
+        elif 'val' in data_path:
+            self.b=self.b[-500:]
+            self.rho=self.rho[-500:]
+        self.rho=torch.cat((torch.tensor(self.rho.real),torch.tensor(self.rho.imag)),dim=-1).float()
+        self.b=torch.cat((torch.tensor(self.b.real),torch.tensor(self.b.imag)),dim=-1).float()
+
+        if prop<=1.0:
+            self.rho=self.rho.to(device)
+            self.b=self.b.to(device)
+    
+        if normalize:
+            self.b=F.normalize(self.b, dim=-1)
+
+
+
 
 
 
@@ -481,8 +510,8 @@ def plot_2_imgs(rho, rho_hat,ind=9,figsize=8,scaling='Linf',font_size=50, Single
     #plt.title('true', fontsize=font_size)
         cbar_used.ax.tick_params(labelsize=font_size)
         ax.tick_params(axis='both', **tick_params)
-        if scaling=="Linf":
-            cbar_used.remove()
+        #if scaling=="Linf":
+        cbar_used.remove()
             
 
 
@@ -502,8 +531,8 @@ def plot_2_imgs(rho, rho_hat,ind=9,figsize=8,scaling='Linf',font_size=50, Single
     cbar=plt.colorbar(pcol2, ax=ax)
 #plt.title('true', fontsize=font_size)
     ax.set_title('Full model', fontsize=font_size)
-    if scaling=="Linf" and not Single:  
-        cbar.mappable.set_clim(*cbar_used.mappable.get_clim())
+    #if scaling=="Linf" and not Single:  
+    cbar.mappable.set_clim(*cbar_used.mappable.get_clim())
     
     cbar.ax.tick_params(labelsize=font_size)
     #cbar.remove()
@@ -694,6 +723,9 @@ def Generate_data_pnas(locat, amount, S=4, seed=0, pixels='One-hot'):
         print('No medium found')
 
     data_rho=np.zeros((amount,medium.shape[-1]))
+    if pixels=='Gaussian_abs':
+        data_rho=np.zeros((amount,medium.shape[-1]))+1j*np.zeros((amount,medium.shape[-1]))
+
     #data_b=np.zeros((amount,631))
     for i in range(amount):
         if pixels=='One-hot':
@@ -701,8 +733,12 @@ def Generate_data_pnas(locat, amount, S=4, seed=0, pixels='One-hot'):
         elif pixels=='soft':
             data_rho[i][:S]=1/S
         elif pixels=='Gaussian':
-            data_rho[i][:S]=np.random.randn(S)
-            data_rho[i]=abs(data_rho[i])/sum(abs(data_rho[i]))
+            data_rho[i][:S]=(.1+np.abs(np.random.randn(S)))*np.sign(np.random.randn(S))
+            #data_rho[i]=abs(data_rho[i])/sum(abs(data_rho[i]))
+        elif pixels=='Gaussian_abs':
+            data_rho[i][:S]=(.1+np.abs(np.random.randn(S)))+1j*np.abs(np.random.randn(S))
+            data_rho[i][:S]=data_rho[i][:S]/abs(data_rho[i][:S])
+            #data_rho[i]=abs(data_rho[i])/sum(abs(data_rho[i]))
         perm = np.random.permutation(medium.shape[-1])
         data_rho[i]=data_rho[i][perm]
     data_b=medium@data_rho.T
@@ -802,3 +838,93 @@ def _projection_simplex(v, z=1):
     theta = cssv[cond][-1] / float(rho)
     w = np.maximum(v - theta, 0)
     return w
+
+
+def plot_2_unordered_imgs(epoch, rho, rho_hat,ind=9,figsize=8,scaling='Linf',font_size=50, Single=False, xpix=31, ypix=21,xpix2=31,ypix2=21, file_name=None):
+    plt.close()
+    if Single:
+        figsize=(figsize,figsize)
+        fig, axes=plt.subplots(nrows= 1, ncols= 1,figsize=figsize)
+
+    figsize=(figsize*2,figsize)
+    fig, axes=plt.subplots(nrows= 1, ncols= 2,figsize=figsize)
+
+    tick_params = {'labelsize': font_size}
+    output=rho.squeeze()
+    ax=axes[0]
+    output=output[ind,:]
+#    if scaling=="Linf":
+#        output=output/torch.max(torch.abs(cat2complex(output)))
+#    elif scaling=="L1":
+#        output=output/torch.sum(torch.abs(cat2complex(output)))
+    img=torch.abs(cat2complex(output.squeeze())).view(xpix, ypix)
+    pcol1=ax.pcolor(img.detach().cpu(),cmap='jet')
+    cbar_used=plt.colorbar(pcol1,ax=ax)
+
+    #plt.title('true', fontsize=font_size)
+    cbar_used.ax.tick_params(labelsize=font_size)
+    ax.tick_params(axis='both', **tick_params)
+    #if scaling=="Linf":
+    cbar_used.remove()
+            
+
+
+    output=rho_hat.squeeze() 
+    output=output[ind,:]
+    if scaling=="Linf":
+
+        output=output/torch.max(torch.abs((output)))
+    elif scaling=="L1":
+        output=output/torch.sum(torch.abs((output)))
+    img=torch.abs((output.squeeze())).view(xpix2, ypix2)
+    if not Single:
+        ax=axes[1]
+    else:
+        ax=plt.gca()
+    pcol2=ax.pcolor(img.detach().cpu(),cmap='jet')
+    cbar=plt.colorbar(pcol2, ax=ax)
+    ax.set_title('Full model', fontsize=font_size)
+    cbar.mappable.set_clim(*cbar_used.mappable.get_clim())
+    
+    cbar.ax.tick_params(labelsize=font_size)
+    #cbar.remove()
+    ax.tick_params(axis='both', **tick_params)
+    fig = plt.gcf()
+    ax = plt.gca()
+    buf = io.BytesIO()
+    fig.savefig(buf)
+    buf.seek(0)
+    img = Image.open(buf)
+     
+    del fig, buf
+    return [wandb.Image(img, caption="Epoch "+str(epoch))]
+
+
+def hist_2_wandb(data, figsize=8, font_size=50, epoch=0):
+    #if min(data)<.50:
+    counts, bins = np.histogram(data, bins=[.01*i for i in range(101)])
+    #elif min(data)<.75:
+    #    counts, bins = np.histogram(data, bins=[.01*i+.5 for i in range(51)])
+    #else:
+    #    counts, bins = np.histogram(data, bins=[.01*i+.75 for i in range(26)])
+    
+    plt.close()
+
+    figsize=(figsize,figsize)
+    fig, axes=plt.subplots(nrows= 1, ncols= 1,figsize=figsize)
+    tick_params = {'labelsize': font_size}
+    
+    plt.title('Histogram max_j<ghat_i, g_j>')
+    plt.hist(data, bins=bins)
+    
+    fig = plt.gcf()
+    ax = plt.gca()
+    ax.tick_params(axis='both', **tick_params)
+
+    buf = io.BytesIO()
+    fig.savefig(buf)
+    buf.seek(0)
+    img = Image.open(buf)
+    
+    del fig, buf
+    return [wandb.Image(img, caption="Epoch "+str(epoch))]

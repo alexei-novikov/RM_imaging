@@ -487,7 +487,7 @@ def encoder_decoder(config=None):
                         increasing=not increasing
 
             if 'complex' in args.data_type or args.lin_type_decoder=='complex':
-                Complex_eye=complex_eye=torch.cat((torch.eye(int(out_dim*2)), torch.zeros((int(out_dim*2),int(out_dim*2)))), dim=1).unsqueeze(1).to(device)
+                Complex_eye=torch.cat((torch.eye(int(out_dim*2)), torch.zeros((int(out_dim*2),int(out_dim*2)))), dim=1).unsqueeze(1).to(device)
             else:
                 Complex_eye=torch.eye(int(out_dim*2)).unsqueeze(1).to(device)
 

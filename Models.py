@@ -36,18 +36,39 @@ class mod_relu(torch.nn.Module):
         self.Relu=nn.ReLU()
 
     def forward(self, x):
-        return self.Relu(torch.abs(x) + self.b)           
+        return self.Relu(torch.abs(x) + self.b)        
+
+
+
+class soft_threh(torch.nn.Module):
+    def __init__(self, th):
+        super(soft_threh,self).__init__()
+        self.th=th
+        self.Relu=nn.ReLU()
+    def forward(self, x):
+        th=self.th
+        x=x.squeeze()
+        real, imag=torch.split(x, int(x.shape[-1]/2), dim=-1)
+        modulus=torch.sqrt(real**2+imag**2)
+        modulus=self.Relu(modulus-th)
+        theta=torch.atan2(imag, real).squeeze()
+        real_out=modulus*torch.cos(theta)
+        imag_out=modulus*torch.sin(theta) 
+        return torch.cat((real_out,imag_out),-1) #relu(torch.abs(x)-th)   
 
 #Linear layer with normalized columns
 class norm_linear(nn.Module):
-    def __init__(self, in_dim, out_dim):
+    def __init__(self, in_dim, out_dim, normalize=True):
         super(norm_linear, self).__init__()
         self.weight=nn.Parameter((torch.rand(out_dim, in_dim)-.5)/(in_dim**(1/2)))
+        self.normalize=normalize
     def forward(self,x):
         weights=F.normalize(self.weight,dim=0)
+
         out=torch.matmul(x,weights.t())
         out=out.squeeze()
-        out=F.normalize(out,dim=-1)
+        if self.normalize:
+            out=F.normalize(out,dim=-1)
         return out
     def time_reverse(self, x):
         weights=F.normalize(self.weight,dim=1)
@@ -61,30 +82,32 @@ class norm_linear(nn.Module):
         return out
     
 class norm_linear_complex(nn.Module):
-    def __init__(self, in_dim, out_dim):
+    def __init__(self, in_dim, out_dim,normalize=True):
         super(norm_linear_complex, self).__init__()
-        self.weight=nn.Parameter((torch.rand(out_dim, in_dim)-.5)/(in_dim**(1/2)))
-    
+        self.weight_real=nn.Parameter((torch.rand(int(out_dim/2), int(in_dim/2))-.5)/(in_dim**(1/2)))
+        self.weight_imag=nn.Parameter((torch.rand(int(out_dim/2), int(in_dim/2))-.5)/(in_dim**(1/2)))
+        self.normalize=normalize
     def forward(self,x):
         x=x.squeeze()
-        weights=F.normalize(self.weight,dim=0)
-        weights=weights.t()
-        weights_real, weights_imag=torch.split(weights, int(weights.shape[1]/2), dim=-1)
+        weights_real=F.normalize(self.weight_real,dim=0)
+        weights_imag=F.normalize(self.weight_imag,dim=0)
+        weights_real=weights_real.t()
+        weights_imag=weights_imag.t()
         x_real, x_imag=torch.split(x.squeeze(), int(x.shape[1]/2), dim=-1)
         out_real=torch.matmul(x_real,weights_real)-torch.matmul(x_imag,weights_imag)
         out_imag=torch.matmul(x_real,weights_imag)+torch.matmul(x_imag,weights_real)
         out=torch.cat((out_real,out_imag),-1)
-        out=F.normalize(out,dim=-1)
+        if self.normalize:
+            out=F.normalize(out,dim=-1)
         return out
-
-
 
 #linear layer wrapper for same signatrue as complex
 class linear_layer_wrapper(nn.Module):
     def __init__(self, in_dim, out_dim, bias=True, activation='relu',threshold_val=False, offset=False,dropout=0.0, batch_normalization=True):
         super(linear_layer_wrapper, self).__init__()
-        in_dim=in_dim*2
-        out_dim=out_dim*2
+        
+        in_dim=math.ceil(in_dim*2)
+        out_dim=math.ceil(out_dim*2)
         if activation=='relu' and batch_normalization:
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), nn.ReLU() ,nn.Dropout(dropout))
         elif activation=='leaky' and batch_normalization:
@@ -93,10 +116,15 @@ class linear_layer_wrapper(nn.Module):
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias), nn.ReLU() ,nn.Dropout(dropout))
         elif activation=='sigmoid' and batch_normalization:
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), nn.Sigmoid() ,nn.Dropout(dropout))
+        elif activation=='tanh' and batch_normalization:
+            self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), nn.Tanh() ,nn.Dropout(dropout))
+        
         elif activation=='mod_relu' and batch_normalization:
             self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), mod_relu(int(out_dim)) ,nn.Dropout(dropout))
         elif activation=='Linear_layer':
-            self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias))                                                   
+            self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias))     
+        elif activation=='mod_threshold':
+            self.layer=nn.Sequential(nn.Linear(int(in_dim),int(out_dim),bias=bias),nn.BatchNorm1d(int(out_dim)), soft_threh(threshold_val) ,nn.Dropout(dropout))                                              
     def forward(self,x):
         out=self.layer(x)
         return out
@@ -120,8 +148,31 @@ class C_Threshold(nn.Module):
         return modulus
 
 
+class soft_threh(nn.Module):
+    def __init__(self, th):
+        super(soft_threh,self).__init__()
+        self.th=th
+        self.Relu=nn.ReLU()
+    def forward(self, x):
+        x=x.squeeze()
+        #x=F.normalize(x,p=1, dim=-1)
+        real, imag=torch.split(x, int(x.shape[-1]/2), dim=-1)
+        modulus=torch.sqrt(real**2+imag**2)
+        modulus=self.Relu(modulus-self.th)
+        #modulus=softmax(modulus)
+        #max_mod, _=torch.max(modulus, dim=-1, keepdim=True)
+        #modulus=modulus/max_mod
+
         
-#complex lienar model class
+        #topk, indices=torch.topk(modulus, 5, dim=-1)
+        #modulus=torch.zeros_like(modulus)
+        #modulus=modulus.scatter(1,indices, topk)
+        #modulus=modulus.squeeze()
+        
+        theta=torch.atan2(imag, real).squeeze()
+        real_out=modulus*torch.cos(theta)
+        imag_out=modulus*torch.sin(theta) 
+        return torch.cat((real_out,imag_out),-1) #relu(torch.abs(x)-th)#complex lienar model class
 class complex_linear_layer(nn.Module):
     def __init__(self, in_dim, out_dim, bias=True, activation='relu', threshold_val=1e-3, offset=True,dropout=0.0, batch_normalization=True):
         super(complex_linear_layer, self).__init__()
@@ -149,6 +200,8 @@ class complex_linear_layer(nn.Module):
             self.activation=mod_relu(out_dim)
         elif activation=='linear_threshold':
             self.activation=mod_relu(out_dim,rand_weights=False)  
+        elif activation=='soft_threh':
+            self.activation=soft_threh(threshold_val)
 
 
             
@@ -259,6 +312,10 @@ class fc_net_batch(nn.Module):
 
 
 
+    def set_params_to_zero(self):
+        for param in self.parameters():
+            param.data.fill_(0)
+        
     def forward(self, x):
         out=x.squeeze()
         #iterates through layer list and evaluates each layer sequentially
@@ -334,9 +391,9 @@ class channeled_lin_layers(nn.Module):
         p=dropout
         num_hidden_lays=len(hidden_dims)
         width=hidden_dims[0]
-        self.input_layer=complex_linear_layer(in_dim, out_dim*width/2, bias=True, activation='mod_relu',threshold_val=1e-3, offset=True,dropout=p, batch_normalization=True)
-        self.layers = nn.ModuleList([nn.Sequential(nn.Conv1d(out_dim*width,out_dim*width, padding=0, kernel_size=1, stride=1, bias=True, groups=out_dim), nn.BatchNorm1d(out_dim*width), nn.ReLU(), nn.Dropout(p=p)) for i in range(num_hidden_lays)])
-        self.output=nn.Conv1d(out_dim*width,out_dim, padding=0, kernel_size=1, stride=1, bias=True, groups=out_dim)
+        self.input_layer=complex_linear_layer(in_dim, out_dim*width, bias=True, activation='mod_relu',threshold_val=1e-3, offset=True,dropout=p, batch_normalization=True)
+        self.layers = nn.ModuleList([nn.Sequential(nn.Conv1d(2*out_dim*hidden_dims[i-1],2*out_dim*hidden_dims[i], padding=0, kernel_size=1, stride=1, bias=True, groups=out_dim), nn.BatchNorm1d(2*out_dim*hidden_dims[i]), nn.LeakyReLU(), nn.Dropout(p=p)) for i in range(1,num_hidden_lays)])
+        self.output=nn.Conv1d(2*out_dim*hidden_dims[-1],out_dim, padding=0, kernel_size=1, stride=1, bias=True, groups=out_dim)
         self.sigmoid=nn.Sigmoid()
 #        self.extra_batch=nn.BatchNorm1d(int(out_dim)) better without
 
@@ -344,7 +401,6 @@ class channeled_lin_layers(nn.Module):
         out=x.squeeze()
         out=self.input_layer(out)
         out=out.unsqueeze(-1)
-
         for layer in self.layers:
             out = layer(out)
         out=self.output(out)
@@ -355,11 +411,115 @@ class channeled_lin_layers(nn.Module):
         return out
         
 
+class channeled_lin_layers_avg(nn.Module):
+    def __init__(self, in_dim, hidden_dims, num_chan, outdim,dropout=0):
+        super(channeled_lin_layers_avg, self).__init__()
+        p=dropout
+        num_hidden_lays=len(hidden_dims)
+        width=hidden_dims[0]
+        self.input_layer=complex_linear_layer(in_dim, num_chan*width, bias=True, activation='mod_relu',threshold_val=1e-3, offset=True,dropout=p, batch_normalization=True)
+        self.layers = nn.ModuleList([nn.Sequential(nn.Conv1d(2*num_chan*hidden_dims[i-1],2*num_chan*hidden_dims[i], padding=0, kernel_size=1, stride=1, bias=True, groups=num_chan), nn.BatchNorm1d(2*num_chan*hidden_dims[i]), nn.LeakyReLU(), nn.Dropout(p=p)) for i in range(1,num_hidden_lays)])
+        self.output=nn.Conv1d(2*num_chan*hidden_dims[-1],outdim*2, padding=0, kernel_size=1, stride=1, bias=True, groups=1)
+        self.sigmoid=nn.Sigmoid()
+#        self.extra_batch=nn.BatchNorm1d(int(out_dim)) better without
+
+    def forward(self, x):
+        out=x.squeeze()
+        out=self.input_layer(out)
+        out=out.unsqueeze(-1)
+        for layer in self.layers:
+            out = layer(out)
+        out=self.output(out)
+        out=out.squeeze()
+        #out=self.sigmoid(out)
+        #out=self.output(out)
+        #out=out.unsqueeze(1)
+        return out
+
+
 #Same as fc_net_batch but includes a batch normalization layer in the output
 class fc_net_extra(fc_net_batch):
     def __init__(self, in_dim, hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True,threshold_val=1e-3, offset=True,dropout=0, out_scaling='L2', batch_normalization=True):
+        super().__init__(in_dim, hidden_dims, out_dim, net_type='fc',linear_type=linear_type, activation=activation, bias=bias,threshold_val=1e-3, offset=offset,dropout=dropout, out_scaling=out_scaling, batch_normalization=batch_normalization)
+        self.extra_batch=nn.BatchNorm1d(int(out_dim*2))
+
+        if net_type=='conv':
+            self.num_conv_layers=3
+            self.conv_layers=nn.ModuleList([nn.Sequential(                
+            nn.Conv2d(3,3,7,padding='same'),
+            nn.BatchNorm2d(3),
+            nn.ReLU()) for i in range(self.num_conv_layers-1)])  
+            self.conv_layers.append(nn.Conv2d(3,1,7,padding='same')) 
+        else:
+            self.num_conv_layers=0 
+    
+    def set_params_to_zero(self):
+        super().set_params_to_zero()
+        self.extra_batch.weight.data.fill_(0)
+    def forward(self, x):
+        x=x.squeeze()
+        if self.num_conv_layers>0:
+            x=x.view(-1, 10,int(len(x[1])/10))
+            x=x.unsqueeze(1)
+            x=x.repeat(1,3,1,1)
+            for i in range(self.num_conv_layers):
+                x=self.conv_layers[i](x)
+            x=x.squeeze()
+            x=x.view(-1, x.shape[1]*x.shape[2])
+        out=super().forward(x)
+        out=self.extra_batch(out.squeeze())
+        return out
+
+
+class fc_net_no_out(fc_net_batch):
+    def __init__(self, in_dim, hidden_dims, out_dim, net_type='fc',linear_type='real', activation='relu', bias=True,threshold_val=1e-3, offset=True,dropout=0, out_scaling='L2', batch_normalization=True):
         super().__init__(in_dim, hidden_dims, out_dim, net_type='fc',linear_type=linear_type, activation=activation, bias=True,threshold_val=1e-3, offset=True,dropout=0, out_scaling=out_scaling, batch_normalization=True)
         self.extra_batch=nn.BatchNorm1d(int(out_dim*2))
+
+
+        p=dropout
+        self.dropout = nn.Dropout(p=p)
+        self.activation=activation
+
+        if linear_type=='complex':
+            linear_layer=complex_linear_layer
+        else:
+            linear_layer=linear_layer_wrapper
+        #Makes network linear if flagged
+        if net_type=='linear' or hidden_dims[0]==0:
+            self.net_type='linear'
+            self.num_layers=1
+            if activation=='linear_threshold':
+                self.layers = nn.ModuleList([(linear_layer(in_dim,out_dim, bias=False,activation='linear_threshold'))])
+                self.layers[0].activation
+            else:
+                self.layers = nn.ModuleList([(linear_layer(in_dim,out_dim, bias=False,activation='Linear_layer'))])
+        else:
+            self.net_type=net_type   
+            self.num_layers=len(hidden_dims)+1
+            self.layers = nn.ModuleList([linear_layer(in_dim, hidden_dims[0], bias=bias, activation=activation,threshold_val=threshold_val, offset=offset, dropout=dropout, batch_normalization=batch_normalization)])
+            self.layers.extend([linear_layer(hidden_dims[i-1],hidden_dims[i],bias=bias, activation=activation,threshold_val=threshold_val, offset=offset,dropout=dropout, batch_normalization=batch_normalization) for i in range(1, self.num_layers-1)])   
+
+
+
+        
+            if net_type=='fc':
+                self.layers.extend([linear_layer(hidden_dims[-1],out_dim, bias=True, activation='Linear_layer',batch_normalization=batch_normalization)])  
+            # reurrent_out are two components. one that is a fully connected, one that is linear. rueccurent_out will return 
+            #Out_scaling(FC(x)+Lin(x))
+            elif self.net_type=='residual_out':
+                self.layers.extend([linear_layer(hidden_dims[-1]+in_dim,out_dim, bias=False, activation='Linear_layer', batch_normalization=batch_normalization)])  
+            
+
+        if self.net_type=='linear' or self.net_type=='stacking'or out_scaling==None:
+           self.out_scaling=None
+        else:
+            self.out_scaling=out_scaling
+        self.sigmoid=nn.Sigmoid()
+        self.softmax=nn.Softmax(-1)
+
+
+
 
         if net_type=='conv':
             self.num_conv_layers=3
@@ -382,7 +542,9 @@ class fc_net_extra(fc_net_batch):
             x=x.view(-1, x.shape[1]*x.shape[2])
         out=super().forward(x)
         out=self.extra_batch(out.squeeze())
-        return out
+        return out    
+
+
 
 class E_C_repeated(torch.nn.Module):
     def __init__(self,  decoder, num_repeats, *encoder_params, **kwargs):
