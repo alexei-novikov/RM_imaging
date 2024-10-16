@@ -82,9 +82,10 @@ STACKED=True
 unlabeled_data=5000
 betas=(.9, .999)  #momenumt parameters
 DICTIONARY_size_R=1024*2 #size of dictionary*2
+layers=[4096, 2048]
 
-#,[os.path.join(cwd,'Data/PNAS-regime_all_seeds/PNAS-regime_seed0'), os.path.join(cwd,'Data/FoldyLox_all_seeds/FoldyLox_seed0'),  os.path.join(cwd,'Data/PNAS-lowcoh_regime_all_seeds/PNAS-lowcoh_regime_seed0'), os.path.join(cwd,'Data/PNAS-highcoh_regime_all_seeds/PNAS-highcoh_regime_seed0')]:
-for EXP_NUM in range(0,10): #NEED 40-50
+
+for EXP_NUM in range(0,10):
     SCALING_param='None'
     WDECAY=1e-2
     ENC_GELMA_OPTIM='AdamW'
@@ -115,13 +116,11 @@ for EXP_NUM in range(0,10): #NEED 40-50
             if abs(j)>coherence and j<.99:
                 coherence=abs(j)
     index_list=[]
-    layers=[4096, 2048]
     torch.cuda.empty_cache()
     torch.manual_seed(EXP_NUM)
     #Raw data unlabeled 
     starttime=time.time()
     target='raw'
-    DICTIONARY_size_R=1024*2
     batchsize=128
     L1_weight_og=1e-1
     L1_weight=L1_weight_og
