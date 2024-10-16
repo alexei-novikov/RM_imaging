@@ -25,6 +25,21 @@ from sklearn.preprocessing import StandardScaler
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
+
+
+import pandas as pd
+
+def read_and_concatenate(file_path):
+    # Read the CSV file into a DataFrame
+    df = pd.read_csv(file_path)
+    
+    # Concatenate EXP_NUM and timestamp columns
+    concatenated_list = (df['EXP_NUM'].astype(str) + '_' + df['timestamp'].astype(str)).tolist()
+    
+    return concatenated_list
+
+
+
 #Data set class. Should contain your data, and when __getitem__ is called, it should 
 #return your data formatted for input into a model
 class data_rho_loaded:
@@ -484,7 +499,7 @@ def save_2_imgs(rho, rho_hat,ind=9,figsize=8,scaling='Linf',font_size=50,  xpix=
     plt.close()
 
 #different plotter
-def plot_2_imgs(rho, rho_hat,ind=9,figsize=8,scaling='Linf',font_size=50, Single=False, xpix=31, ypix=21, file_name=None):
+def plot_2_imgs(rho, rho_hat,ind=9,figsize=8,scaling='Linf',font_size=50, Single=False, xpix=31, ypix=21, file_name=None, Lclim=None, Hclim=None):
     plt.close()
     if Single:
         figsize=(figsize,figsize)
@@ -530,10 +545,12 @@ def plot_2_imgs(rho, rho_hat,ind=9,figsize=8,scaling='Linf',font_size=50, Single
     pcol2=ax.pcolor(img.detach().cpu(),cmap='jet')
     cbar=plt.colorbar(pcol2, ax=ax)
 #plt.title('true', fontsize=font_size)
-    ax.set_title('Full model', fontsize=font_size)
-    #if scaling=="Linf" and not Single:  
-    cbar.mappable.set_clim(*cbar_used.mappable.get_clim())
-    
+    #ax.set_title('Full model', fontsize=font_size)
+    if not Single:  
+        cbar.mappable.set_clim(*cbar_used.mappable.get_clim())
+    elif Lclim!=None:
+        cbar.mappable.set_clim(Lclim, Hclim)
+        cbar.remove()
     cbar.ax.tick_params(labelsize=font_size)
     #cbar.remove()
     ax.tick_params(axis='both', **tick_params)
@@ -736,8 +753,10 @@ def Generate_data_pnas(locat, amount, S=4, seed=0, pixels='One-hot'):
             data_rho[i][:S]=(.1+np.abs(np.random.randn(S)))*np.sign(np.random.randn(S))
             #data_rho[i]=abs(data_rho[i])/sum(abs(data_rho[i]))
         elif pixels=='Gaussian_abs':
-            data_rho[i][:S]=(.1+np.abs(np.random.randn(S)))+1j*np.abs(np.random.randn(S))
+            data_rho[i][:S]=(np.random.randn(S))+1j*(np.random.randn(S))
             data_rho[i][:S]=data_rho[i][:S]/abs(data_rho[i][:S])
+            #sign=np.sign(np.random.randn(data_rho[i][:S].shape))
+            #data_rho[i][:S]=data_rho[i][:S]*sign
             #data_rho[i]=abs(data_rho[i])/sum(abs(data_rho[i]))
         perm = np.random.permutation(medium.shape[-1])
         data_rho[i]=data_rho[i][perm]
