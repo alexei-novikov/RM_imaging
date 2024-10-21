@@ -613,7 +613,7 @@ for EXP_NUM in range(0,10):
     medium_hat=decoder(Complex_eye).squeeze()
     medium_hat=F.normalize(medium_hat, dim=-1)
     medium_hat=medium_hat.cpu().detach().numpy()
-    medium_hat=H.cat2complex(medium_hat)                    
+    medium_hat=H.cat2complex(medium_hat) #test                   
     column_list.append(medium_hat)
     torch.save(encoder.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats/{SAV_GROUP}/enocder_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')    
     torch.save(decoder.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats/{SAV_GROUP}/decoder_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')
