@@ -586,16 +586,16 @@ for EXP_NUM in range(0,10):
                 wand_dict['CE loss']=CEloss_avg
             if INV_weight>0:
                 wand_dict['INV loss']=INV_loss_avg
-            if epoch%1000==0:
-                torch.save(encoder.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats/{SAV_GROUP}/enocder_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')    
-                torch.save(decoder.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats/{SAV_GROUP}/decoder_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')
-                if GELMA>0:    
-                    torch.save(GELMA_net.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats//{SAV_GROUP}/GELMA_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')
-            if epoch==4999:
-                torch.save(encoder.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats/{SAV_GROUP}/enocder_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')    
-                torch.save(decoder.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats/{SAV_GROUP}/decoder_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')
-                if GELMA>0:    
-                    torch.save(GELMA_net.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats//{SAV_GROUP}/GELMA_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')
+            #if epoch%1000==0:
+            #    torch.save(encoder.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats/{SAV_GROUP}/enocder_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')    
+            #    torch.save(decoder.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats/{SAV_GROUP}/decoder_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')
+            #    if GELMA>0:    
+            #        torch.save(GELMA_net.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats//{SAV_GROUP}/GELMA_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')
+            #if epoch==4999:
+            #    torch.save(encoder.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats/{SAV_GROUP}/enocder_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')    
+            #    torch.save(decoder.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats/{SAV_GROUP}/decoder_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')
+            #    if GELMA>0:    
+            #        torch.save(GELMA_net.state_dict(), f'/home/achristie/Codes_data/Experiment_data/rhosupport_stats//{SAV_GROUP}/GELMA_{unlabeled_data}_{EXP_NUM}_{timestampStr}.pt')
             
 
         
